@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Tests>
+	<Prop ID="1" Name="ASDF" />
+	<Prop ID="2" Name="GHJK" />
+	<Prop ID="3" Name="ZXCV" />
+
+	<Cls Name="Cls1" Desc="Some words" >
+		<Prop ID="2" />
+		<Prop ID="3" />
+	</Cls>
+
+	<Cls Name="Cls2" Desc="Other words" >
+		<Prop ID="1" />
+		<Prop ID="2" />
+	</Cls>
+
+	<Cls Name="Cls3" Desc="Yet more words" >
+		<Prop ID="3" />
+	</Cls>
+
+</Tests>

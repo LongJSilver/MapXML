@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Tests>
+	<Item String="Item0">
+		<Item xml.format="en-US" String="Item1" >
+			<Item String="Item11" Double="12,0" />
+			<Item String="Item12" Double="12.0" />
+		</Item>
+		<Item xml.format="it-IT" String="Item2" >
+			<Item String="Item21" Double="12,0" />
+			<Item String="Item22" Double="12.0" />
+		</Item>
+	</Item>
+</Tests>

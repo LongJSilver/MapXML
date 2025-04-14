@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xml>
+  <AnimalClasses>
+    <AnimalClass Type="Mammal">
+      <AnimalInfo>
+        <Habitat>Forest</Habitat>
+      </AnimalInfo>
+      <AnimalDetails>
+        <UniqueID>{B81A9EE7-6F1B-4348-BF43-D309EB3CB87E}</UniqueID>
+        <NameTemplate>{AnimalName}</NameTemplate>
+        <RelationDetails>
+          <Relation1>
+            <ParentID>{E92B790A-F6E3-4462-A385-D788A0FD98EB}</ParentID>
+            <RelationType>Parent</RelationType>
+          </Relation1>
+        </RelationDetails>
+      </AnimalDetails>
+      <ClassInfo>
+        <Class>
+          <ClassID>{01EC8206-4DB3-4717-8E6A-7060BFA04F07}</ClassID>
+          <Habitat>Forest</Habitat>
+        </Class>
+      </ClassInfo>
+    </AnimalClass>
+  </AnimalClasses>
+</xml>

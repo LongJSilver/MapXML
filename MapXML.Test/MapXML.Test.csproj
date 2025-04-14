@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="DataFiles\Charsets.xml" />
+    <None Remove="DataFiles\EnumConversion.xml" />
+    <None Remove="DataFiles\MixedContent.xml" />
+    <None Remove="DataFiles\NamedTextContent_Create.xml" />
+    <None Remove="DataFiles\NamedTextContent_Lookup.xml" />
+    <None Remove="DataFiles\Nested.xml" />
+    <None Remove="DataFiles\SimpleValues.xml" />
+    <None Remove="DataFiles\XMLFunctions.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="DataFiles\Charsets.xml" />
+    <EmbeddedResource Include="DataFiles\EnumConversion.xml" />
+    <EmbeddedResource Include="DataFiles\MixedContent.xml" />
+    <EmbeddedResource Include="DataFiles\NamedTextContent_Create.xml" />
+    <EmbeddedResource Include="DataFiles\NamedTextContent_Lookup.xml" />
+    <EmbeddedResource Include="DataFiles\Nested.xml" />
+    <EmbeddedResource Include="DataFiles\SimpleValues.xml" />
+    <EmbeddedResource Include="DataFiles\XMLFunctions.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MapXML\MapXML.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<?asd ?>
+<Tests> 
+  <SimpleValue      Number="2"
+                    String="Parent"
+                    Decimal1="1"
+                    Decimal2="2"
+   >
+    <SimpleValue      Number="3"
+                      String="Child1"
+       />
+    <SimpleValue      Number="4"
+                      String="Child2"
+       />
+  </SimpleValue>
+</Tests>
