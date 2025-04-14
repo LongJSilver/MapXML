@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35818.85
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapXML", "MapXML\MapXML.csproj", "{88640221-0A8A-21BA-BA5B-7142769ACC97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapXML.Test", "MapXML.Test\MapXML.Test.csproj", "{6C671EAB-10D4-4BB0-8D1B-42BD5192D94E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88640221-0A8A-21BA-BA5B-7142769ACC97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88640221-0A8A-21BA-BA5B-7142769ACC97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88640221-0A8A-21BA-BA5B-7142769ACC97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88640221-0A8A-21BA-BA5B-7142769ACC97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C671EAB-10D4-4BB0-8D1B-42BD5192D94E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C671EAB-10D4-4BB0-8D1B-42BD5192D94E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C671EAB-10D4-4BB0-8D1B-42BD5192D94E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C671EAB-10D4-4BB0-8D1B-42BD5192D94E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {87D620BC-8860-404F-A813-E44AC157C5E5}
+	EndGlobalSection
+EndGlobal
