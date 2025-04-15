@@ -153,7 +153,7 @@ namespace MapXML
         }
         internal object InvokeWithAttributes(IXMLInternalContext context, object functionInstance, IReadOnlyDictionary<string, string> attributes)
         {
-            object?[] par = new object[_parameterMapping.Length];
+            object?[] par = new object?[_parameterMapping.Length];
             for (int i = 0; i < _parameterMapping.Length; i++)
             {
                 if (!attributes.TryGetValue(_parameterMapping[i].AttributeName, out string param))

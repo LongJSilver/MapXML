@@ -523,10 +523,10 @@ namespace MapXML.Behaviors
         {
             result = null;
 
-            if (_staticClassData != null && _staticClassData.HasLookupForType(targetClass, new HashSet<string>(attributes.Keys), out XMLFunction lookupFunction))
+            if (_staticClassData != null && _staticClassData.HasLookupForType(targetClass, new HashSet<string>(attributes.Keys), out XMLFunction? lookupFunction))
             {
                 result = lookupFunction.InvokeWithAttributes(this, this.GetCurrentInstance(), attributes);
-                return true;
+                return result != null;
             }
 
             /* NOTA BENE:
@@ -538,7 +538,7 @@ namespace MapXML.Behaviors
             {
                 return Parent?.Lookup_FromAttributes(nodeName, attributes, targetClass, out result) ?? false;
             }
-            else return true;
+            else return result != null;
         }
         /// <summary>
         /// Stiamo cercando di serializzare un nodo che "punta" ad un altro oggetto tramite lookup.
@@ -699,6 +699,15 @@ namespace MapXML.Behaviors
                         }
                     //--------------------------//
                 }
+            }
+            else
+            {
+                if (CurrentInstance == null || CurrentInstance is PlaceHolderForLateLookup)
+                {
+                    //Lookup failed 
+                    throw new LookupFailureException();
+                }
+
             }
             this.Parent?.FinalizedChild(nodeName, Attributes, this.GetCurrentInstance());
 

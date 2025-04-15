@@ -139,7 +139,7 @@ namespace MapXML
             PathElement currentElement = _path.Pop();
             currentElement.CurrentChildrenIndex++;
             _path.Push(currentElement);
-            string newPath = $"{currentElement.Path}[{currentElement.CurrentChildrenIndex}]{NodeName}/";
+            string newPath = $"{currentElement.Path}[{currentElement.CurrentChildrenIndex}:{NodeName}]/";
             _path.Push(new PathElement(NodeName, currentElement.CurrentLevel + 1, 0, newPath));
         }
 
