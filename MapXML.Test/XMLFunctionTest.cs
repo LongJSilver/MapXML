@@ -121,7 +121,9 @@ namespace MapXML.Tests
 
             [XmlChild("Cls", DeserializationPolicy.Create, CanSerialize = true, CanDeserialize = false)]
             private List<Cls> _cls = new List<Cls>();
+            [XMLNonSerialized]
             public IEnumerable<Prop> Properties => _props;
+            [XMLNonSerialized]
             public IEnumerable<Cls> Classes => _cls;
             [XmlChild("Cls")]
             public void AddClass(Cls c)

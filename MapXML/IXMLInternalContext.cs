@@ -26,7 +26,7 @@ namespace MapXML
     {
         Attribute = 1,
         Child = 2,
-        TextContent = 3,
+        TextContent = 4,
         //---- 
         ChildOrAttribute = Child | Attribute,
         AttributeOrText = Attribute | TextContent,

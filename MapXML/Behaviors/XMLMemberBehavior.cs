@@ -57,7 +57,7 @@ namespace MapXML.Behaviors
         }
 
         protected XMLMemberBehavior(MemberInfo member, AbstractXMLMemberAttribute? attribute)
-            : this(member, attribute?.SourceType ?? XmlSourceType.Attribute, attribute?.Policy ?? DeserializationPolicy.Create)
+            : this(member, attribute?.SourceType ?? XmlSourceType.ChildOrAttribute, attribute?.Policy ?? DeserializationPolicy.Create)
         {
             this._attribute = attribute;
             if (attribute != null)
