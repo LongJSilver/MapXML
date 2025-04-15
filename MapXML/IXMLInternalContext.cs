@@ -139,6 +139,7 @@ namespace MapXML
 
         bool GetLookupAttributes(IXMLState state, string parentNode, string targetNode, object item, [MaybeNullWhen(false)][NotNullWhen(true)]  out IReadOnlyDictionary<string, string>? attributes);
         bool GetLookupAttribute(IXMLState state, string nodeName, string attributeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result);
+        bool GetLookupTextContent(IXMLState state, string nodeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result);
 
     }
 }

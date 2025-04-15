@@ -28,7 +28,6 @@ namespace MapXML.Behaviors
         public readonly Type? TargetType;
 
         public int Level { get; internal set; }
-        public bool EncounteredTextContent { get; private set; }
         public bool IsCreation { get; private set; }
         public readonly IReadOnlyDictionary<string, string> Attributes;
         private int ChildrenCount = 0;
@@ -36,6 +35,8 @@ namespace MapXML.Behaviors
         private XmlStaticClassData? _staticClassData;
         private readonly IXMLSerializationHandler? _handler;
         internal CultureInfo? Format { get; set; }
+        internal bool EncounteredTextContent => _TextContent != null;
+        private string? _TextContent = null;
 
         //--------------------------------------//
 
@@ -147,8 +148,7 @@ namespace MapXML.Behaviors
                         else
                         {
                             object ValueToLookup = beh.ObtainValue(this);
-                            if (ValueToLookup != null && this.LookupAttributeFor(this.NodeName, null,
-                                  beh.TypeToCreate, ValueToLookup, out string AttributeValue)
+                            if (ValueToLookup != null && this.LookupTextContentFor(this.NodeName, beh.TypeToCreate, ValueToLookup, out string? AttributeValue)
                                 )
                                 return AttributeValue;
                             else return null;
@@ -501,7 +501,7 @@ namespace MapXML.Behaviors
         {
             result = null;
 
-            if (_staticClassData != null && _staticClassData.HasTextContentLookupForType(targetClass, out XMLFunction lookupFunction))
+            if (_staticClassData != null && _staticClassData.HasLookupForType(targetClass, SingleAttribute: true, out XMLFunction? lookupFunction))
             {
                 result = lookupFunction.InvokeWithTextContent(this, this.GetCurrentInstance(), TextContent);
                 return true;
@@ -555,7 +555,7 @@ namespace MapXML.Behaviors
         {
             attributes = null;
 
-            if (_staticClassData != null && _staticClassData.HasSerializationLookupForType(targetClass, false, out var lookupFunction))
+            if (_staticClassData != null && _staticClassData.HasLookupForType(targetClass, false, out var lookupFunction))
             {
                 attributes = lookupFunction.GetLookupAttributes(context: this, TargetNodeName: targetNodeName, item: item);
                 return true;
@@ -608,7 +608,7 @@ namespace MapXML.Behaviors
                     result = lookupFunction.InvokeReverseLookup(this, this.GetCurrentInstance(), value);
                     return true;
                 }
-                else if (_staticClassData.HasSerializationLookupForType(targetClass, true, out lookupFunction))
+                else if (_staticClassData.HasLookupForType(targetClass, true, out lookupFunction))
                 {
                     var (attName, AttValue) = lookupFunction.GetLookupAttribute(context: this, TargetNodeName: nodeName, item: value);
                     result = AttValue;
@@ -627,7 +627,37 @@ namespace MapXML.Behaviors
             }
             else return true;
         }
-        public void Finalized(string nodeName)
+        internal bool LookupTextContentFor(string nodeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result)
+        {
+            result = null;
+
+            if (_staticClassData != null)
+            {
+                if (_staticClassData.HasReverseLookupForType(targetClass, out var lookupFunction))
+                {
+                    result = lookupFunction.InvokeReverseLookup(this, this.GetCurrentInstance(), value);
+                    return true;
+                }
+                else if (_staticClassData.HasLookupForType(targetClass, SingleAttribute: true, out lookupFunction))
+                {
+                    var (attName, AttValue) = lookupFunction.GetLookupAttribute(context: this, TargetNodeName: nodeName, item: value);
+                    result = AttValue;
+                    return true;
+                }
+            }
+
+            /* NOTA BENE:
+                interroghiamo solo il context locale invece di usare GetHandler() perché in caso di fallimento giriamo la palla al parent,
+                il quale dovrà PRIMA controllare i SUOI staticClassData e poi eventualmente interrogare il suo context.
+                una chiamata a GetHandler() finirebbe per risalire al primo context disponibile bypassando il controllo dei vari staticClassData che potrebbero trovarsi in mezzo
+            */
+            if (_handler == null || !_handler.GetLookupTextContent(this, nodeName, targetClass, value, out result))
+            {
+                return Parent?.LookupTextContentFor(nodeName, targetClass, value, out result) ?? false;
+            }
+            else return true;
+        }
+        internal void Finalized(string nodeName)
         {
             if (!string.IsNullOrEmpty(_TextContent))
             {
@@ -702,11 +732,9 @@ namespace MapXML.Behaviors
         }
 
 
-        private string _TextContent = null;
         internal void StoreTextContent(string text)
         {
             _TextContent = text;
-            EncounteredTextContent = true;
         }
 
         private bool ProcessTextContent(String value)
