@@ -19,37 +19,43 @@ namespace MapXML.Behaviors
             else return (Parent as IXMLState)?.GetParent(i - 1);
         }
 
-        public XMLNodeBehaviorProfile? Parent;
+        internal XMLNodeBehaviorProfile? Parent;
 
-
-        public bool AllowImplicitFields { get; }
-        public readonly string NodeName;
-        public readonly bool IsSerializing;
-        public readonly Type? TargetType;
-
-        public int Level { get; internal set; }
-        public bool IsCreation { get; private set; }
-        public readonly IReadOnlyDictionary<string, string> Attributes;
-        private int ChildrenCount = 0;
-        public readonly IDictionary<string, object> _customData;
+        /****** STATIC ******/
         private XmlStaticClassData? _staticClassData;
+
+        private static Dictionary<Type, XmlStaticClassData> __typeCache =
+                   new Dictionary<Type, XmlStaticClassData>();
+
+        XmlStaticClassData? IXMLInternalContext.StaticClassData => _staticClassData;
+        public IXMLSerializationHandler? Handler => GetHandler();
+        public IDictionary<string, object> CustomData => _customData;
+
+        public IXMLOptions Options { get; }
+        internal readonly string NodeName;
+        internal readonly bool IsSerializing;
+        internal readonly Type? TargetType;
+
+        /****** Identity ******/
         private readonly IXMLSerializationHandler? _handler;
+        internal bool IsCreation { get; private set; }
         internal CultureInfo? Format { get; set; }
+        IFormatProvider? IXMLInternalContext.FormatProvider => GetFormat();
+        public int Level { get; set; }
+        internal readonly IReadOnlyDictionary<string, string> Attributes;
+        /****** STATE ******/
         internal bool EncounteredTextContent => _TextContent != null;
         private string? _TextContent = null;
 
+        internal readonly IDictionary<string, object> _customData;
+        private int ChildrenCount = 0;
+        public object? CurrentInstance { get; set; }
         //--------------------------------------//
 
-        public IDictionary<string, object> CustomData => _customData;
 
-        XmlStaticClassData? IXMLInternalContext.StaticClassData => _staticClassData;
 
-        public object? CurrentInstance { get; internal set; }
 
-        IFormatProvider? IXMLInternalContext.FormatProvider => GetFormat();
 
-        public IXMLSerializationHandler? Handler => GetHandler();
-        //--------------------------------------//
         private IFormatProvider? GetFormat()
         {
             XMLNodeBehaviorProfile prof = this;
@@ -124,11 +130,7 @@ namespace MapXML.Behaviors
                 IsCreation = creation
             };
         }
-
-        private static Dictionary<Type, XmlStaticClassData> __typeCache =
-                   new Dictionary<Type, XmlStaticClassData>();
-
-        public string? GetTextContentToSerialize()
+        internal string? GetTextContentToSerialize()
         {
             if (CanSerializeAsTextContent)
             {
@@ -158,7 +160,7 @@ namespace MapXML.Behaviors
                 else return null;
             }
         }
-        public List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)> GetAllChildrenToSerialize()
+        internal List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)> GetAllChildrenToSerialize()
         {
             List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)> result = new List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)>();
             if (IsNamedTextContentNode)
@@ -183,7 +185,7 @@ namespace MapXML.Behaviors
             }
             return result;
         }
-        public Dictionary<String, String> GetAttributesToSerialize(Predicate<string>? ShouldGetThis = null)
+        internal Dictionary<String, String> GetAttributesToSerialize(Predicate<string>? ShouldGetThis = null)
         {
             Dictionary<String, String> result = new Dictionary<string, string>();
             if (IsNamedTextContentNode)
@@ -220,7 +222,7 @@ namespace MapXML.Behaviors
                         {
                             object ValueToLookup = beh.ObtainValue(this);
                             if (ValueToLookup != null && this.LookupAttributeFor(this.NodeName, AttributeName,
-                                  beh.TypeToCreate, ValueToLookup, out string AttributeValue)
+                                  beh.TypeToCreate, ValueToLookup, out string? AttributeValue)
                                 )
                                 result.Add(AttributeName, AttributeValue);
                         }
@@ -238,7 +240,7 @@ namespace MapXML.Behaviors
                 List<XMLMemberBehavior> _behaviors = new List<XMLMemberBehavior>();
                 List<XMLFunction> _functions = new List<XMLFunction>();
 
-                ICollection<(MemberInfo member, AbstractXMLMemberAttribute attr)> members = new Collection<(MemberInfo, AbstractXMLMemberAttribute)>();
+                ICollection<(MemberInfo member, AbstractXMLMemberAttribute? attr)> members = new Collection<(MemberInfo, AbstractXMLMemberAttribute?)>();
                 int order = 0;
                 foreach (var m in t.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
                 {
@@ -281,10 +283,10 @@ namespace MapXML.Behaviors
                     _functions.Add(f);
                 }
 
-                foreach (var item in members)
+                foreach ((MemberInfo member, AbstractXMLMemberAttribute? attr) in members)
                 {
                     XMLMemberBehavior beh;
-                    beh = XMLMemberBehavior.Generate(item.member, item.attr);
+                    beh = XMLMemberBehavior.Generate(member, attr);
                     beh.Init();
                     _behaviors.Add(beh);
                 }
@@ -323,9 +325,9 @@ namespace MapXML.Behaviors
                                       select mt).FirstOrDefault();
             if (IntermediateMethod != null)
             {
-                object Func(string s, IFormatProvider ifp)
+                object Func(string s, IFormatProvider? ifp)
                 {
-                    return IntermediateMethod.Invoke(null, new object[] { s, ifp });
+                    return IntermediateMethod.Invoke(null, new object?[] { s, ifp });
                 }
                 result = Func;
             }
@@ -341,9 +343,9 @@ namespace MapXML.Behaviors
                                       select mt).FirstOrDefault();
                 if (IntermediateMethod != null)
                 {
-                    object Func(string s, IFormatProvider ifp)
+                    object Func(string s, IFormatProvider? ifp)
                     {
-                        return IntermediateMethod.Invoke(null, new object[] { s });
+                        return IntermediateMethod.Invoke(null, new object?[] { s });
                     }
                     result = Func;
                 }
@@ -355,9 +357,9 @@ namespace MapXML.Behaviors
 
                 if (constr != null)
                 {
-                    object Func(string s, IFormatProvider ifp)
+                    object Func(string s, IFormatProvider? ifp)
                     {
-                        return constr.Invoke(null, new object[] { s });
+                        return constr.Invoke(null, new object?[] { s });
                     }
                     result = Func;
                 }
@@ -373,7 +375,7 @@ namespace MapXML.Behaviors
 
                 if (nonNullableTargetType.IsEnum)
                 {
-                    object Func(string s, IFormatProvider ifp)
+                    object Func(string s, IFormatProvider? ifp)
                     {
                         return (Enum)Enum.Parse(nonNullableTargetType, s);
                     }
@@ -393,9 +395,9 @@ namespace MapXML.Behaviors
 
                 if (IntermediateMethod != null)
                 {
-                    object fromStringWrapper(string s, IFormatProvider ifp)
+                    object fromStringWrapper(string s, IFormatProvider? ifp)
                     {
-                        return IntermediateMethod.Invoke(null, new object[] { s, ifp });
+                        return IntermediateMethod.Invoke(null, new object?[] { s, ifp });
                     }
 
                     result = fromStringWrapper;
@@ -427,9 +429,9 @@ namespace MapXML.Behaviors
 
             if (IntermediateMethod != null)
             {
-                string ToStringWrapper(object s, IFormatProvider ifp)
+                string ToStringWrapper(object s, IFormatProvider? ifp)
                 {
-                    return (string)IntermediateMethod.Invoke(s, new object[] { ifp });
+                    return (string)IntermediateMethod.Invoke(s, new object?[] { ifp });
                 }
 
                 result = ToStringWrapper;
@@ -440,11 +442,11 @@ namespace MapXML.Behaviors
 
             return result;
         }
-        public void InjectDependencies(object newObject)
+        internal void InjectDependencies(object newObject)
         {
             GetHandler()?.InjectDependencies(this, newObject);
         }
-        public bool InfoForNode(string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
+        internal bool InfoForNode(string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
             [MaybeNullWhen(false)][NotNullWhen(true)] out Type? resultType)
         {
             resultType = default;
@@ -468,7 +470,7 @@ namespace MapXML.Behaviors
             return false;
         }
 
-        public bool InfoForAttribute(string nodeName, string attributeName, out DeserializationPolicy policy, [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result)
+        internal bool InfoForAttribute(string nodeName, string attributeName, out DeserializationPolicy policy, [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result)
         {
             result = default;
             policy = default;
@@ -482,7 +484,7 @@ namespace MapXML.Behaviors
             return false;
         }
 
-        public bool InfoForTextContent(string nodeName, out Type result)
+        internal bool InfoForTextContent(string nodeName, out Type? result)
         {
             result = default;
             //policy = default;
@@ -497,7 +499,7 @@ namespace MapXML.Behaviors
         }
 
         //---------------//
-        public bool Lookup_FromTextContent(string nodeName, string TextContent, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result)
+        internal bool Lookup_FromTextContent(string nodeName, string TextContent, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result)
         {
             result = null;
 
@@ -519,7 +521,7 @@ namespace MapXML.Behaviors
             else return true;
 
         }
-        public bool Lookup_FromAttributes(string nodeName, IReadOnlyDictionary<string, string> attributes, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result)
+        internal bool Lookup_FromAttributes(string nodeName, IReadOnlyDictionary<string, string> attributes, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result)
         {
             result = null;
 
@@ -550,7 +552,7 @@ namespace MapXML.Behaviors
         /// <param name="targetClass">La classe del campo che contiene questo oggetto (potrebbe essere una super classe di quella di runtime)</param>
         /// <param name="attributes">(out) Dizionario di attributi da restituire</param>
         /// <returns></returns>
-        public bool GetLookupAttributes(string targetNodeName, object item, Type targetClass,
+        internal bool GetLookupAttributes(string targetNodeName, object item, Type targetClass,
           [MaybeNullWhen(false)][NotNullWhen(true)] out IReadOnlyDictionary<string, string>? attributes)
         {
             attributes = null;
@@ -597,7 +599,7 @@ namespace MapXML.Behaviors
             }
             else return true;
         }
-        public bool LookupAttributeFor(string nodeName, string attributeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result)
+        internal bool LookupAttributeFor(string nodeName, string attributeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result)
         {
             result = null;
 
@@ -663,25 +665,29 @@ namespace MapXML.Behaviors
             {
                 if (this.GetCurrentInstance() is PlaceHolderForLateLookup phll)
                 {
-                    object result = null;
+                    object? result = null;
                     bool ok = false;
                     try
                     {
-                        ok = Lookup_FromTextContent(this.NodeName, _TextContent, TargetType, out result);
+                        ok = Lookup_FromTextContent(this.NodeName, _TextContent!, TargetType!, out result);
                     }
                     catch (Exception e)
                     {
+#pragma warning disable 8604 
                         throw new LookupFailureException(e, phll.PreviousException);
+#pragma warning restore 8604 
                     }
 
                     CurrentInstance = result;
 
                     if (CurrentInstance == null)
+#pragma warning disable 8604 
                         throw new LookupFailureException(phll.PreviousException);
+#pragma warning restore 8604 
                 }
                 else
                 {
-                    ProcessTextContent(_TextContent);
+                    ProcessTextContent(_TextContent!);
                 }
             }
 
@@ -711,13 +717,13 @@ namespace MapXML.Behaviors
             }
             this.Parent?.FinalizedChild(nodeName, Attributes, this.GetCurrentInstance());
 
-
             //-----//
             XMLNodeBehaviorProfile c = this;
-            GetHandler()?.Finalized(this, nodeName, this.CurrentInstance);
+            if (CurrentInstance != null)
+                GetHandler()?.Finalized(this, nodeName, this.CurrentInstance);
             //----//
         }
-        public void FinalizedChild(string childNodeName, IReadOnlyDictionary<string, string> childAttributes, object result)
+        internal void FinalizedChild(string childNodeName, IReadOnlyDictionary<string, string> childAttributes, object result)
         {
             ChildrenCount++;
             if (_staticClassData != null)
@@ -733,7 +739,7 @@ namespace MapXML.Behaviors
         internal bool ProcessAttribute(string NodeName, string AttributeName, String AttributeValue)
         {
             XMLMemberBehavior beh;
-            if (!_staticClassData._attributeBehaviors_forDes.TryGetValue(AttributeName, out beh))
+            if (_staticClassData == null || !_staticClassData._attributeBehaviors_forDes.TryGetValue(AttributeName, out beh))
                 return false;
 
             beh.ProcessAttribute(this, NodeName, AttributeName, AttributeValue);
@@ -750,7 +756,7 @@ namespace MapXML.Behaviors
         {
             if (this.IsNamedTextContentNode)
             {
-                if (TargetType.Equals(typeof(string)))
+                if (TargetType!.Equals(typeof(string)))
                 {
                     CurrentInstance = value;
                     return true;
@@ -771,7 +777,7 @@ namespace MapXML.Behaviors
         internal bool ProcessValue(string NodeName, string AttributeName, object value)
         {
             XMLMemberBehavior beh;
-            if (!_staticClassData._attributeBehaviors_forDes.TryGetValue(AttributeName, out beh))
+            if (_staticClassData == null || !_staticClassData._attributeBehaviors_forDes.TryGetValue(AttributeName, out beh))
                 return false;
 
             beh.ProcessValue(this, NodeName, AttributeName, value);
@@ -788,7 +794,7 @@ namespace MapXML.Behaviors
 
             return Converter != null;
         }
-        public bool HasReverseConverterForType(Type t, out (XMLFunction function, object instance)? Converter)
+        internal bool HasReverseConverterForType(Type t, out (XMLFunction function, object instance)? Converter)
         {
             Converter = null;
             if (_staticClassData?.HasReverseConverterForType(t, out XMLFunction? function) ?? false)
@@ -862,9 +868,12 @@ namespace MapXML.Behaviors
             return false;
         }
 
-        public bool CanProcessAttributes => (_staticClassData != null && _staticClassData._attributeBehaviors_forDes.Count > 0);
+        internal bool CanProcessAttributes => (_staticClassData != null && _staticClassData._attributeBehaviors_forDes.Count > 0);
 
-        public bool CanSerializeAsTextContent
+        /// <summary>
+        /// Check if the current node represents an instance that can be entirely serialized as a text content node.
+        /// </summary>
+        internal bool CanSerializeAsTextContent
         {
             get
             {
@@ -886,7 +895,7 @@ namespace MapXML.Behaviors
                 return f != null;
             }
         }
-        public bool IsNamedTextContentNode
+        internal bool IsNamedTextContentNode
         {
             get
             {

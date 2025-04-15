@@ -15,7 +15,7 @@ namespace MapXML.Behaviors
         protected override bool InternalCanSerializeAsChild => true;
         protected override bool InternalCanSerializeAsTextContent => false;
 
-        public _forEnumerableMember(MemberInfo member, AbstractXMLMemberAttribute attribute)
+        public _forEnumerableMember(MemberInfo member, AbstractXMLMemberAttribute? attribute)
           : base(member, attribute)
         {
             var args = new[] { typeof(int) };

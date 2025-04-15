@@ -10,7 +10,7 @@ namespace MapXML.Behaviors
     {
         private MethodInfo _method => (this.Member as MethodInfo) ?? throw new ArgumentException("Member is either null or not a method");
 
-        public _forMethod(MethodInfo method, AbstractXMLMemberAttribute attribute)
+        public _forMethod(MethodInfo method, AbstractXMLMemberAttribute? attribute)
             : base(method, attribute)
         {
             var param = method.GetParameters();

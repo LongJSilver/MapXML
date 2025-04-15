@@ -56,7 +56,7 @@ namespace MapXML.Behaviors
             _canDeserialize = _canSerialize = true;
         }
 
-        protected XMLMemberBehavior(MemberInfo member, AbstractXMLMemberAttribute attribute)
+        protected XMLMemberBehavior(MemberInfo member, AbstractXMLMemberAttribute? attribute)
             : this(member, attribute?.SourceType ?? XmlSourceType.Attribute, attribute?.Policy ?? DeserializationPolicy.Create)
         {
             this._attribute = attribute;
@@ -145,7 +145,7 @@ namespace MapXML.Behaviors
             InjectValue(context, childNodeResult);
         }
 
-        internal static XMLMemberBehavior Generate(MemberInfo member, AbstractXMLMemberAttribute attribute)
+        internal static XMLMemberBehavior Generate(MemberInfo member, AbstractXMLMemberAttribute? attribute)
         {
             if (member is MethodInfo method)
             {

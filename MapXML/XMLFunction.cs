@@ -149,7 +149,7 @@ namespace MapXML
         public bool IsConverterFor(Type t)
         {
             if (!IsConverter) return false;
-            return t.IsAssignableFrom(ReturnType);        
+            return t.IsAssignableFrom(ReturnType);
         }
         internal object InvokeWithAttributes(IXMLInternalContext context, object functionInstance, IReadOnlyDictionary<string, string> attributes)
         {

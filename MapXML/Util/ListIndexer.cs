@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace MapXML.Utils
@@ -21,7 +20,7 @@ namespace MapXML.Utils
             AddRange(toAdd, GetKey);
         }
 
-        public void AddRange(IEnumerable<Value> toAdd, Func<Value,Key> GetKey )
+        public void AddRange(IEnumerable<Value> toAdd, Func<Value, Key> GetKey)
         {
             foreach (var val in toAdd)
             {

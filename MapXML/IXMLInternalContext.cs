@@ -125,7 +125,7 @@ namespace MapXML
         bool Lookup_FromTextContent(IXMLState state, string nodeName, string TextContent, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
         bool Lookup_FromAttribute(IXMLState state, string nodeName, string attributeName, string attributeValue, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
         bool Lookup_FromAttributes(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
-               
+
         //*****************//
         //Domain: Conversion to and from string
         bool HasConversionFromString(Type targetType, [MaybeNullWhen(false)][NotNullWhen(true)] out ConvertFromString? deleg);
@@ -137,7 +137,7 @@ namespace MapXML
         //***************************************************************************//
         //Domain: Lookup for existing objects
 
-        bool GetLookupAttributes(IXMLState state, string parentNode, string targetNode, object item, [MaybeNullWhen(false)][NotNullWhen(true)]  out IReadOnlyDictionary<string, string>? attributes);
+        bool GetLookupAttributes(IXMLState state, string parentNode, string targetNode, object item, [MaybeNullWhen(false)][NotNullWhen(true)] out IReadOnlyDictionary<string, string>? attributes);
         bool GetLookupAttribute(IXMLState state, string nodeName, string attributeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result);
         bool GetLookupTextContent(IXMLState state, string nodeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result);
 

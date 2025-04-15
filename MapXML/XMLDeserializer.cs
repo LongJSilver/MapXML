@@ -49,7 +49,7 @@ namespace MapXML
         public new IDeserializationOptions Options => (IDeserializationOptions)base.Options;
 
         public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, IDeserializationOptions? options = null)
-            : this(Handler, source, owner: null, options) 
+            : this(Handler, source, owner: null, options)
         { }
 
         public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, object? owner = null, IDeserializationOptions? options = null)

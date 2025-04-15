@@ -27,7 +27,7 @@ namespace MapXML
             _quickAssociations[nodeName] = (targetType, policy);
         }
 
-        public void Associate<V>(String nodeName, DeserializationPolicy policy=DeserializationPolicy.Create)
+        public void Associate<V>(String nodeName, DeserializationPolicy policy = DeserializationPolicy.Create)
         {
             Associate(nodeName, typeof(V), policy);
         }
@@ -56,7 +56,7 @@ namespace MapXML
         /// <typeparam name="V"></typeparam>
         /// <returns></returns>
         public IEnumerable<V> GetResults<V>(string nodeName)
-            => _resultsByNode[nodeName].OfType<V>().ToList();   
+            => _resultsByNode[nodeName].OfType<V>().ToList();
 
         public virtual void Finalized(IXMLState state, string nodeName, object result)
         {
@@ -67,7 +67,7 @@ namespace MapXML
             }
         }
 
-        public virtual bool GetLookupAttributes(IXMLState state, string parentNode, string targetNode, object item, 
+        public virtual bool GetLookupAttributes(IXMLState state, string parentNode, string targetNode, object item,
             [MaybeNullWhen(false)][NotNullWhen(true)] out IReadOnlyDictionary<string, string>? attributes)
         {
             attributes = null;
