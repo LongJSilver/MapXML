@@ -126,6 +126,13 @@ namespace MapXML
             return t.IsAssignableFrom(_method.ReturnType) && _parameterMapping.Length == 1;
         }
 
+        /// <summary>
+        /// True if this function is specifically created to convert <paramref name="targetClass"/> into string, hence it's a reverse lookup.
+        /// They have <see cref="string"/> as return type and a single parameter of <paramref name="t"/> type.
+        /// <para/> Note that since these functions do not accept a IFormatProvider parameter, they are NOT equivalent to a <see cref="ConvertToString"/> delegate
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
         public bool IsReverseLookupFor(Type t)
         {
             var param = _method.GetParameters();
@@ -139,7 +146,11 @@ namespace MapXML
                 && param[1].ParameterType.IsAssignableFrom(typeof(IFormatProvider))
                 && ReturnType.Equals(typeof(string));
         }
-
+        public bool IsConverterFor(Type t)
+        {
+            if (!IsConverter) return false;
+            return t.IsAssignableFrom(ReturnType);        
+        }
         internal object InvokeWithAttributes(IXMLInternalContext context, object functionInstance, IReadOnlyDictionary<string, string> attributes)
         {
             object?[] par = new object[_parameterMapping.Length];
@@ -159,13 +170,13 @@ namespace MapXML
 
         public IReadOnlyDictionary<string, string> GetLookupAttributes(IXMLInternalContext context, string TargetNodeName, object item)
         {
-            XMLNodeBehaviorProfile profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.AllowImplicitFields, TargetNodeName, item);
+            XMLNodeBehaviorProfile profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.Options, TargetNodeName, item);
             var attNames = new HashSet<String>(_parameterMapping.Select(p => p.AttributeName), StringComparer.InvariantCultureIgnoreCase);
             return profile.GetAttributesToSerialize(attNames.Contains);
         }
         public (String attName, String AttValue) GetLookupAttribute(IXMLInternalContext context, string TargetNodeName, object item)
         {
-            XMLNodeBehaviorProfile profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.AllowImplicitFields , TargetNodeName, item);
+            XMLNodeBehaviorProfile profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.Options, TargetNodeName, item);
             var attNames = new HashSet<String>(_parameterMapping.Select(p => p.AttributeName));
             var result = profile.GetAttributesToSerialize(attNames.Contains).First();
             return (result.Key, result.Value);

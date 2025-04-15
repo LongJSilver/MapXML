@@ -17,10 +17,7 @@ namespace MapXML.Tests
             Stream s = GetTestXML("MixedContent");
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<MixedContent>("MixedContent");
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = false
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, owner: null);
             Assert.ThrowsException<XMLMixedContentException>(xdes.Run);
 
         }
@@ -46,10 +43,7 @@ namespace MapXML.Tests
             Stream s = GetTestXML("SimpleValues");
             DefaultHandler handler = new DefaultHandler();
             handler.Associate("SimpleValue", typeof(SimpleValueClass), DeserializationPolicy.Create);
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(1, handler.ResultCount);
             SimpleValueClass svc = handler.GetResults<SimpleValueClass>()[0];
@@ -66,10 +60,7 @@ namespace MapXML.Tests
             Stream s = GetTestXML("SimpleValues");
             DefaultHandler handler = new DefaultHandler();
             handler.Associate("SimpleValue", typeof(SimpleValuePropsClass), DeserializationPolicy.Create);
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(1, handler.ResultCount);
             SimpleValuePropsClass svc = handler.GetResults<SimpleValuePropsClass>()[0];

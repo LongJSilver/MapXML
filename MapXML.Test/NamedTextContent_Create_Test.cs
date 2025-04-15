@@ -17,10 +17,7 @@ namespace MapXML.Tests
             });
 
             handl.Associate("AnimalClasses", typeof(AnimalClasses), DeserializationPolicy.Create);
-            XMLDeserializer xdes = new XMLDeserializer(handl, GetTestXML("NamedTextContent_Create"), null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handl, GetTestXML("NamedTextContent_Create"), owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
             var result = handl.GetResults<AnimalClasses>().FirstOrDefault();
@@ -50,7 +47,8 @@ namespace MapXML.Tests
             Assert.AreEqual("Forest", classInfo.Habitat);
 
 
-            XMLSerializer ser = new XMLSerializer(handl, null, "xml");
+            var opt = XMLSerializer.OptionsBuilder().WithAdditionalRootNode("xml").Build();
+            XMLSerializer ser = new XMLSerializer(handl, opt);
             handl.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
             ser.Run();
 

@@ -24,34 +24,98 @@ namespace MapXML
             this.Value = value;
         }
     }
+
+
+    public interface ISerializationOptions : IXMLOptions
+    {
+        /// <summary>
+        /// Whenever a lookup node with ONE single attribute 
+        /// needs to be written, opt instead for writing the lookup value as text within the node.
+        /// </summary>
+        public bool PreferTextNodesForLookups { get; }
+
+        /// <summary>
+        /// The name of a root node to be included in the serialization process.
+        /// If there is only one 'first level' node, the <see cref="AdditionalRootNode"/> is optional, 
+        /// otherwise it is required and its absence will cause an exception to be thrown.
+        /// </summary>
+        public string? AdditionalRootNode { get; }
+    }
+
+    public interface ISerializationOptionsBuilder : IXMLOptionsBuilder<ISerializationOptionsBuilder>
+    {
+        /// <summary>
+        /// 
+        /// Whenever a lookup node with ONE single attribute 
+        /// needs to be written, opt instead for writing the lookup value as text within the node.
+        /// <para/>DEFAULT: false
+        /// </summary>
+        public ISerializationOptionsBuilder PreferTextNodesForLookups(bool b);
+
+        /// <summary>
+        /// The name of a root node to be included in the serialization process.
+        /// If there is only one 'first level' node, the <see cref="AdditionalRootNode"/> is optional, 
+        /// otherwise it is required and its absence will cause an exception to be thrown.
+        /// <para/>DEFAULT: null
+        /// </summary>
+        public ISerializationOptionsBuilder WithAdditionalRootNode(string s);
+
+        ISerializationOptions Build();
+    }
+
     public class XMLSerializer : XMLSerializerBase
     {
+        public static ISerializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
+
+        private class DefaultOptions : AbstractOptionsBuilder<ISerializationOptionsBuilder>, ISerializationOptionsBuilder, ISerializationOptions
+        {
+            public bool PreferTextNodesForLookups { get; private set; } = false;
+            public string? AdditionalRootNode { get; private set; } = null;
+
+            public ISerializationOptions Build() => this;
+
+            ISerializationOptionsBuilder ISerializationOptionsBuilder.PreferTextNodesForLookups(bool b)
+            {
+                PreferTextNodesForLookups = b;
+                return this;
+            }
+
+            ISerializationOptionsBuilder ISerializationOptionsBuilder.WithAdditionalRootNode(string s)
+            {
+                if (IsValidXmlNodeName(s))
+                {
+                    AdditionalRootNode = s;
+                }
+                else
+                    throw new ArgumentException($"<{s}> is not a valid xml node name");
+                return this;
+            }
+        }
+
+
         IXMLSerializationHandler? _handler;
-        public String? RootNode { get; }
-        public String? FormatString { get; }
         private readonly StringBuilder _sb = new StringBuilder();
         public String Result => _sb.ToString();
 
 
-        private List<(string name, object item, string? FormatName, int externalOrder, int addOrder)> _firstLevelObjects =
-            new List<(string name, object item, string? FormatName, int externalOrder, int addOrder)>();
+        private List<(string name, object item, CultureInfo? culture, int externalOrder, int addOrder)> _firstLevelObjects =
+            new List<(string name, object item, CultureInfo? culture, int externalOrder, int addOrder)>();
 
-        public XMLSerializer(IXMLSerializationHandler? context, string? UseFormat = null, string? OptionalRootNode = null)
+        public new ISerializationOptions Options => (ISerializationOptions)base.Options;
+        public XMLSerializer(IXMLSerializationHandler? context, ISerializationOptions? options = null)
+            : base(options ?? new DefaultOptions())
         {
             this._handler = context;
-            this.FormatString = UseFormat;
-            RootNode = OptionalRootNode;
-        }
-
-        public XMLSerializer(IXMLSerializationHandler? context, string nodeName, object subject, string? UseFormat = null, string? OptionalRootNode = null)
-            : this(context, UseFormat, OptionalRootNode)
-        {
-            AddItem(nodeName, subject, formatName: UseFormat);
         }
 
         public void AddItem(string NodeName, object item, int order = 0, string? formatName = null)
         {
-            _firstLevelObjects.Add((NodeName, item, formatName, order, _firstLevelObjects.Count));
+            CultureInfo? ci = this.Options.Culture;
+            if (formatName != null)
+            {
+                ci = CultureInfo.GetCultureInfo(formatName);
+            }
+            _firstLevelObjects.Add((NodeName, item, ci, order, _firstLevelObjects.Count));
         }
 
         internal void CheckForFormatAttribute(IDictionary<String, String> attributes)
@@ -61,50 +125,50 @@ namespace MapXML
                 ContextStack.Format = CultureInfo.GetCultureInfo(formatName);
             }
         }
-
         public override void Run()
         {
             CultureInfo cult;
-            if (this.FormatString != null)
+
+            if (_firstLevelObjects.Count > 1 && IsValidXmlNodeName(Options.AdditionalRootNode!))
             {
-                cult = CultureInfo.GetCultureInfo(FormatString);
+                throw new NotSupportedException($"Cannot serialize multiple first level objects without a root node; please specify a VALID root node name through the {nameof(ISerializationOptions.AdditionalRootNode)} option.");
             }
-            else
-            {
-                cult = (CultureInfo.CurrentCulture);
-            }
+
+
+            cult = this.Options.Culture ?? CultureInfo.CurrentCulture;
+
             _sb.Clear();
             ClearStack();
             using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, Encoding.UTF8))
             using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 }))
             {
-                Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, RootNode, null, true, this.AllowImplicitFields));
+                Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, this.Options, Options.AdditionalRootNode, null, true));
 
                 ContextStack!.Format = cult;
 
-                if (RootNode != null)
+                if (Options.AdditionalRootNode != null)
                 {
-                    xmlWriter.WriteStartElement(RootNode);
+                    xmlWriter.WriteStartElement(Options.AdditionalRootNode);
                     xmlWriter.WriteAttributeString(FORMAT_PROVIDER_ATTRIBUTE, ContextStack.Format.Name);
-                    Push(RootNode);
+                    Push(Options.AdditionalRootNode);
                 }
 
                 IEnumerable<(string name, object item, string? formatName)> toSerialize =
                     _firstLevelObjects
                         .OrderBy(s => s.externalOrder)
                         .ThenBy(s => s.addOrder)
-                        .Select(s => (s.name, s.item, s.FormatName));
+                        .Select(s => (s.name, s.item, s.culture?.Name));
 
                 foreach (var firstLevelItem in toSerialize)
                 {
-                    Push(XMLNodeBehaviorProfile.CreateSerializationNode((IXMLSerializationHandler?)null, this.AllowImplicitFields,
+                    Push(XMLNodeBehaviorProfile.CreateSerializationNode((IXMLSerializationHandler?)null, this.Options,
                         firstLevelItem.name, firstLevelItem.item.GetType(),
                         firstLevelItem.item, firstLevelItem.formatName));
                     WriteCurrentNodeCreate(xmlWriter);
                     Pop();
                 }
 
-                if (RootNode != null)
+                if (Options.AdditionalRootNode != null)
                 {
                     xmlWriter.WriteEndElement();
                 }
@@ -142,25 +206,22 @@ namespace MapXML
                     {
                         if (policy == DeserializationPolicy.Create)
                         {
-                            Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.AllowImplicitFields, nodeName, targetType, child));
+                            Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.Options, nodeName, targetType, child));
                             WriteCurrentNodeCreate(xmlWriter);
                             Pop();
                         }
                         else
                         {
-                            if (false)
+                            if (!this.ContextStack.GetLookupAttributes(nodeName, child, targetType, out IReadOnlyDictionary<string, string>? lookUpAttributes))
                             {
-                                string TextContent = "";
-                                WriteLookupTextContentChild(xmlWriter, nodeName, TextContent);
+                                throw new ArgumentException($"Cannot find lookup attributes for {nodeName} within {ContextStack.NodeName}");
+                            }
+                            if (this.Options.PreferTextNodesForLookups && lookUpAttributes.Count == 1)
+                            {
+                                WriteLookupTextContentChild(xmlWriter, nodeName, lookUpAttributes.First().Value);
                             }
                             else
                             {
-
-                                if (!this.ContextStack.GetLookupAttributes(nodeName, child, targetType, out IReadOnlyDictionary<string, string>? lookUpAttributes))
-                                {
-                                    throw new ArgumentException($"Cannot find lookup attributes for {nodeName} within {ContextStack.NodeName}");
-                                }
-
                                 WriteLookupChild(xmlWriter, nodeName, lookUpAttributes);
                             }
                         }

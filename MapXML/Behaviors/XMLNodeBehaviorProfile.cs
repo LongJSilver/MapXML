@@ -66,12 +66,13 @@ namespace MapXML.Behaviors
 
 
         private XMLNodeBehaviorProfile(
-            IXMLSerializationHandler? handler,
+            IXMLSerializationHandler? handler, IXMLOptions options,
                  string Node, IReadOnlyDictionary<string, string>? attributes,
               object? currentObject, Type? targetType,
-                 bool IsSerializing, bool allowImplicitFields)
+                 bool IsSerializing)
         {
             _handler = handler;
+            this.Options = options;
 
             this.NodeName = Node;
             this.Attributes = attributes ?? new Dictionary<string, string>();
@@ -80,46 +81,44 @@ namespace MapXML.Behaviors
             this.TargetType = targetType;
 
             this.IsSerializing = IsSerializing;
-            this.AllowImplicitFields = allowImplicitFields;
             //------------------//
             _customData = new Dictionary<string, object>();
             if (CurrentInstance != null && !CurrentInstance.Equals(typeof(string)))
             {
-                FindStaticData(this.AllowImplicitFields);
+                FindStaticData(this.Options.AllowImplicitFields);
             }
         }
 
-        internal static XMLNodeBehaviorProfile CreateTopNode(IXMLSerializationHandler? handler, string? NodeName, object? owner, bool isSerializing, bool allowImplicitFields)
+        internal static XMLNodeBehaviorProfile CreateTopNode(IXMLSerializationHandler? handler, IXMLOptions options, string? NodeName, object? owner, bool isSerializing)
         {
-            return new XMLNodeBehaviorProfile(handler, NodeName ?? string.Empty, null, owner, owner?.GetType(), isSerializing, allowImplicitFields)
+            return new XMLNodeBehaviorProfile(handler, options, NodeName ?? string.Empty, null, owner, owner?.GetType(), isSerializing)
             {
                 IsCreation = true
             };
         }
 
-        internal static XMLNodeBehaviorProfile CreateSerializationNode(IXMLSerializationHandler? handler, bool allowImplicitFields,
+        internal static XMLNodeBehaviorProfile CreateSerializationNode(IXMLSerializationHandler? handler, IXMLOptions opt,
             string name, Type targetType, object item, string? formatName = null)
         {
-            var result = new XMLNodeBehaviorProfile(handler, name, null, item, targetType, true, allowImplicitFields);
+            var result = new XMLNodeBehaviorProfile(handler, opt, name, null, item, targetType, true);
             if (formatName != null)
                 result.Format = CultureInfo.GetCultureInfo(formatName);
             return result;
         }
 
         internal static XMLNodeBehaviorProfile GetDummyForLookupAttributes(
-            IXMLSerializationHandler? handler,
-            bool allowImplicitFields,
+            IXMLSerializationHandler? handler, IXMLOptions options,
             string targetNodeName, object item)
         {
-            return new XMLNodeBehaviorProfile(handler, targetNodeName, null, item, item.GetType(), true, allowImplicitFields);
+            return new XMLNodeBehaviorProfile(handler, options, targetNodeName, null, item, item.GetType(), true);
         }
 
 
-        internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler, bool creation,
-            bool allowImplicitFields, string nodeName, Type targetType, Dictionary<string, string> attributes, object owner)
+        internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler, IXMLOptions options, bool creation,
+            string nodeName, Type targetType, Dictionary<string, string> attributes, object owner)
         {
 
-            return new XMLNodeBehaviorProfile(handler, nodeName, attributes, owner, targetType, false, allowImplicitFields)
+            return new XMLNodeBehaviorProfile(handler, options, nodeName, attributes, owner, targetType, false)
             {
                 IsCreation = creation
             };

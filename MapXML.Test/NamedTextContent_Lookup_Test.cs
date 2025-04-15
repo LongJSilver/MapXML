@@ -16,10 +16,7 @@ namespace MapXML.Tests
             });
 
             handl.Associate("AnimalClasses", typeof(AnimalClasses), DeserializationPolicy.Create);
-            XMLDeserializer xdes = new XMLDeserializer(handl, GetTestXML("NamedTextContent_Lookup"), null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handl, GetTestXML("NamedTextContent_Lookup"), owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
             //*********************//
@@ -44,8 +41,8 @@ namespace MapXML.Tests
             //*********************//
 
 
-
-            XMLSerializer ser = new XMLSerializer(handl, null, "xml");
+            var opt = XMLSerializer.OptionsBuilder().WithAdditionalRootNode("xml").Build();
+            XMLSerializer ser = new XMLSerializer(handl, opt);
             handl.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
             ser.Run();
 

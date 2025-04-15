@@ -58,11 +58,7 @@ namespace MapXML
         /// </summary>
         XmlStaticClassData? StaticClassData { get; }
 
-        /// <summary>
-        /// Gets a value indicating whether implicit fields are allowed.
-        /// /// 
-        /// </summary>
-        bool AllowImplicitFields { get; }
+        IXMLOptions Options { get; }
 
         /// <summary>
         /// Gets the custom data associated with the XML context.

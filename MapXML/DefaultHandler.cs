@@ -115,6 +115,12 @@ namespace MapXML
             return false;
         }
 
+        public virtual bool GetLookupTextContent(IXMLState state, string nodeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string result)
+        {
+            result = null;
+            return false;
+        }
+
         public void AddCreationOveride<V>(Func<object> creator)
         {
             _creators[typeof(V)] = creator;

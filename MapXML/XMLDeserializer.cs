@@ -9,17 +9,60 @@ using System.Runtime.Serialization;
 
 namespace MapXML
 {
+    public interface IDeserializationOptions : IXMLOptions
+    {
+        /// <summary>
+        /// Whether to skip the root node of the XML document.
+        /// <para/> DEFAULT: false
+        /// </summary>
+        bool IgnoreRootNode { get; }
+    }
+    public interface IDeserializationOptionsBuilder : IXMLOptionsBuilder<IDeserializationOptionsBuilder>
+    {
+        IDeserializationOptionsBuilder IgnoreRootNode(bool b);
+        IDeserializationOptions Build();
+    }
     public class XMLDeserializer : XMLSerializerBase
     {
-        public bool IgnoreRootNode { get; set; } = false;
+        /// <summary>
+        /// An instance of the default options for the deserializer, with the exception of the <see cref="IDeserializationOptions.IgnoreRootNode"/> value which is set to true
+        /// </summary>
+        public static IDeserializationOptions DefaultOptions_IgnoreRootNode { get; } = OptionsBuilder().IgnoreRootNode(true).Build();
+        public static IDeserializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
+        private class DefaultOptions : AbstractOptionsBuilder<IDeserializationOptionsBuilder>, IDeserializationOptions, IDeserializationOptionsBuilder
+        {
+            public bool IgnoreRootNode { get; private set; } = false;
+
+
+            IDeserializationOptions IDeserializationOptionsBuilder.Build() => this;
+
+            IDeserializationOptionsBuilder IDeserializationOptionsBuilder.IgnoreRootNode(bool b)
+            {
+                IgnoreRootNode = b;
+                return this;
+            }
+        }
+
         private readonly Stream _source;
         private readonly SaxReader _reader;
 
-        public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, object? owner = null, bool AllowImplicitFields = true)
+        public new IDeserializationOptions Options => (IDeserializationOptions)base.Options;
+
+        public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, IDeserializationOptions? options = null)
+            : this(Handler, source, owner: null, options) 
+        { }
+
+        public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, object? owner = null, IDeserializationOptions? options = null)
+            : base(options ?? new DefaultOptions())
         {
-            this.AllowImplicitFields = AllowImplicitFields;
+
+            if (this.Options.IgnoreRootNode && owner != null)
+            {
+                throw new ArgumentException("Cannot ignore root node when an owner object is provided!");
+            }
+
             if (Handler != null)
-                Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, null, owner, false, this.AllowImplicitFields));
+                Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, null, owner, false));
             this._source = source ?? throw new ArgumentNullException(nameof(source));
             _reader = new SaxReader(_source);
             _reader.OnNodeEnd += this.NodeEnd;
@@ -29,7 +72,7 @@ namespace MapXML
 
         void NodeStart(string nodeName, Dictionary<string, string> attributes)
         {
-            if (CurrentLevel > 0 || !IgnoreRootNode)
+            if (CurrentLevel > 0 || !this.Options.IgnoreRootNode)
             {
                 if (!ContextStack.IsCreation)
                 {
@@ -88,9 +131,8 @@ namespace MapXML
                 }
 
 
-                Push(XMLNodeBehaviorProfile.CreateDeserializationNode(newHandler,
-                    nodePolicy == DeserializationPolicy.Create, this.AllowImplicitFields,
-                    nodeName, targetType, attributes, currentObject));
+                Push(XMLNodeBehaviorProfile.CreateDeserializationNode(newHandler, this.Options,
+                    nodePolicy == DeserializationPolicy.Create, nodeName, targetType, attributes, currentObject));
                 if (shouldAbsorbAttributes && ContextStack.CanProcessAttributes)
                 {
                     foreach (KeyValuePair<string, string> item in attributes)

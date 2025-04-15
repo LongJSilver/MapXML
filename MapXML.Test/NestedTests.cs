@@ -14,10 +14,7 @@ namespace MapXML.Tests
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<OneNestedChild>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, owner:null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             OneNestedChild svc = handler.GetResults<OneNestedChild>().First(n => n.Name.Equals("Parent"));
@@ -34,10 +31,8 @@ namespace MapXML.Tests
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<NestedChildrenArray>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             NestedChildrenArray svc = handler.GetResults<NestedChildrenArray>().First(n => n.Name.Equals("Parent"));
@@ -59,15 +54,13 @@ namespace MapXML.Tests
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<NestedChildrenArray>("SimpleValue");
 
-
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
             NestedChildrenArray svc = handler.GetResults<NestedChildrenArray>().First(n => n.Name.Equals("Parent"));
-            XMLSerializer ser = new XMLSerializer(handler, "SimpleValue", svc, OptionalRootNode: "Tests");
+            var opt = XMLSerializer.OptionsBuilder().WithAdditionalRootNode("Tests").Build();
+            XMLSerializer ser = new XMLSerializer(handler, opt);
+            ser.AddItem("SimpleValue", svc);
             ser.Run();
 
         }
@@ -79,10 +72,8 @@ namespace MapXML.Tests
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<NestedChildrenCollection>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+      
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             NestedChildrenCollection svc = handler.GetResults<NestedChildrenCollection>().First(n => n.Name.Equals("Parent"));
@@ -104,10 +95,7 @@ namespace MapXML.Tests
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             NestedChildrenDictionary svc = handler.GetResults<NestedChildrenDictionary>().First(n => n.Name.Equals("Parent"));
@@ -127,15 +115,16 @@ namespace MapXML.Tests
             Stream s = GetTestXML("Nested");
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
-
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, null)
-            {
-                IgnoreRootNode = true
-            };
+         
+            XMLDeserializer xdes = new XMLDeserializer(handler, s, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
+            //*************//
             NestedChildrenDictionary svc = handler.GetResults<NestedChildrenDictionary>().First(n => n.Name.Equals("Parent"));
-            XMLSerializer ser = new XMLSerializer(handler, "SimpleValue", svc, OptionalRootNode: "Tests");
+
+            var opt = XMLSerializer.OptionsBuilder().WithAdditionalRootNode("Tests").Build();
+            XMLSerializer ser = new XMLSerializer(handler, opt);
+            ser.AddItem("SimpleValue", svc);
             ser.Run();
         }
         private class OneNestedChild
