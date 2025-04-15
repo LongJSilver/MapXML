@@ -11,7 +11,7 @@ namespace MapXML.Tests
             Stream s = GetTestXML("EnumConversion");
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<TestClass>("Enum");
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(1, handler.ResultCount);
             TestClass svc = handler.GetResults<TestClass>()[0];
@@ -25,7 +25,7 @@ namespace MapXML.Tests
             Stream s = GetTestXML("Charsets");
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<TestClass>("Item");
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, owner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             var Results = handler.GetResults<TestClass>();
             Assert.AreNotEqual(12.0, Results.First(t => t.Name.Equals("Item11")).Number);

@@ -13,7 +13,7 @@ namespace MapXML.Tests
             TestBaseHandler handler = new TestBaseHandler();
             handler.Associate<Test_WithLookup>("Tests");
             var opt = XMLDeserializer.OptionsBuilder().AllowImplicitFields(true).Build();
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, opt);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, opt);
             xdes.Run();
             //---------------------------//
 
@@ -33,7 +33,7 @@ namespace MapXML.Tests
 
 
             var opt = XMLDeserializer.OptionsBuilder().AllowImplicitFields(true).Build();
-            XMLDeserializer xdes = new XMLDeserializer(cont, s, opt);
+            XMLDeserializer xdes = new XMLDeserializer(s, cont, opt);
 
             xdes.Run();
             //---------------------------//
@@ -52,7 +52,7 @@ namespace MapXML.Tests
             handler.Associate<Test_WithLookup>("Tests");
 
             var opt = XMLDeserializer.OptionsBuilder().AllowImplicitFields(true).Build();
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, opt);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, opt);
             xdes.Run();
             //---------------------------//
             Test_WithLookup result = handler.GetResults<Test_WithLookup>().First();
@@ -70,7 +70,7 @@ namespace MapXML.Tests
             handler.Associate<Test_WithLookup>("Tests");
 
             var opt = XMLDeserializer.OptionsBuilder().AllowImplicitFields(true).Build();
-            XMLDeserializer xdes = new XMLDeserializer(handler, s, opt);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, opt);
             xdes.Run();
             //---------------------------//
             //---------------------------// 

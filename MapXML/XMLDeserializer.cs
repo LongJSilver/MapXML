@@ -48,11 +48,20 @@ namespace MapXML
 
         public new IDeserializationOptions Options => (IDeserializationOptions)base.Options;
 
-        public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, IDeserializationOptions? options = null)
-            : this(Handler, source, owner: null, options)
+        public XMLDeserializer(string XmlString, IDeserializationOptions? options = null)
+            : this(XmlString, Handler:null, options)
+        { }
+        public XMLDeserializer(string XmlString, IXMLSerializationHandler? Handler, IDeserializationOptions? Options = null)
+            : this(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(XmlString)), Handler, owner: null, Options)
+        { }
+        public XMLDeserializer(Stream source, IDeserializationOptions? options = null)
+            : this( source, Handler:null, owner: null, options)
+        { }
+        public XMLDeserializer(Stream source, IXMLSerializationHandler? Handler, IDeserializationOptions? options = null)
+            : this(source, Handler, owner: null, options)
         { }
 
-        public XMLDeserializer(IXMLSerializationHandler? Handler, Stream source, object? owner = null, IDeserializationOptions? options = null)
+        public XMLDeserializer(Stream source, IXMLSerializationHandler? Handler, object? owner = null, IDeserializationOptions? options = null)
             : base(options ?? new DefaultOptions())
         {
 
