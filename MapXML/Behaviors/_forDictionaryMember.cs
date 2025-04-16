@@ -9,6 +9,9 @@ namespace MapXML.Behaviors
 {
     internal class _forDictionaryMember : XMLMemberBehavior
     {
+        private static readonly string ExceptionMessage_NoDirectSerialization
+            = $"A {nameof(IDictionary)} member cannot be serialized directly, it should be flagged with '{nameof(XmlChildAttribute)}' and serialized as a set of children.";
+
         //-----------------//
         //results cache
         private static readonly Dictionary<string, (MemberInfo member, KeyFinderType type)> __KeyFinderCache
@@ -194,7 +197,7 @@ namespace MapXML.Behaviors
 
         internal override string GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName)
         {
-            throw new NotSupportedException();
+            throw new InvalidOperationException($"Attribute: {AttributeName} - {ExceptionMessage_NoDirectSerialization}");
         }
 
         internal override IEnumerable<object> GetChildrenToSerialize(IXMLInternalContext context, string NodeName)
@@ -224,12 +227,12 @@ namespace MapXML.Behaviors
         }
         internal override object ObtainValue(IXMLInternalContext context)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
 
         internal override string GetTextContentToSerialize(IXMLInternalContext context)
         {
-            throw new NotSupportedException();
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using MapXML.Behaviors;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml;
 
@@ -143,6 +144,18 @@ namespace MapXML
             _path.Push(new PathElement(NodeName, currentElement.CurrentLevel + 1, 0, newPath));
         }
 
+        [DoesNotReturn]
+        protected void Throw(string message, params Exception[] previousExc)
+        {
+            throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath,
+                              message, previousExc);
+        }
+        [DoesNotReturn]
+        protected void Throw(string message, Exception innerExc, params Exception[] previousExc)
+        {
+            throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, message,
+                              inner: innerExc, previousExc);
+        }
 
     }
 }

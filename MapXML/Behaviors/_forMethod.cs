@@ -8,6 +8,8 @@ namespace MapXML.Behaviors
 {
     internal class _forMethod : XMLMemberBehavior
     {
+        private static readonly string ExceptionMessage_NoDirectSerialization = $"A 'Method' member cannot be serialized.";
+
         private MethodInfo _method => (this.Member as MethodInfo) ?? throw new ArgumentException("Member is either null or not a method");
 
         public _forMethod(MethodInfo method, AbstractXMLMemberAttribute? attribute)
@@ -32,17 +34,17 @@ namespace MapXML.Behaviors
 
         internal override string GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Attribute: {AttributeName} - {ExceptionMessage_NoDirectSerialization}");
         }
 
         internal override IEnumerable<object> GetChildrenToSerialize(IXMLInternalContext context, string NodeName)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
 
         internal override string GetTextContentToSerialize(IXMLInternalContext context)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(ExceptionMessage_NoDirectSerialization);
         }
         internal override string ObtainAttributeValue(IXMLInternalContext context)
         {
@@ -50,7 +52,7 @@ namespace MapXML.Behaviors
         }
         internal override object ObtainValue(IXMLInternalContext context)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
 
         protected override bool InternalCanSerializeAsAttribute => false;

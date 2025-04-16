@@ -24,6 +24,15 @@ namespace MapXML
             this.PreviousExceptions = previousExceptions;
         }
 
+        internal XMLSerializationException(string NodeName, int Level, string XmlPath, string Message, Exception inner, params Exception[] previousExceptions)
+            : base(CreateMessage(NodeName, Level, XmlPath, !string.IsNullOrEmpty(Message) ? Message : (inner.Message ?? string.Empty)), inner)
+        {
+            this.NodeName = NodeName;
+            this.Level = Level;
+            this.Path = XmlPath;
+            this.PreviousExceptions = previousExceptions;
+        }
+
         internal XMLSerializationException(string NodeName, int Level, string XmlPath, string Message, params Exception[] previousExceptions) : base(CreateMessage(NodeName, Level, XmlPath, Message))
         {
             this.NodeName = NodeName;

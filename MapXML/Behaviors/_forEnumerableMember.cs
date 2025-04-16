@@ -9,6 +9,9 @@ namespace MapXML.Behaviors
 {
     internal class _forEnumerableMember : XMLMemberBehavior
     {
+        private static readonly string ExceptionMessage_NoDirectSerialization = 
+            $"An {nameof(IEnumerable)} member cannot be serialized directly, it should be flagged with '{nameof(XmlChildAttribute)}' and serialized as a set of children.";
+
         private readonly Type _typeToCreate;
         public override Type TypeToCreate => _typeToCreate;
         protected override bool InternalCanSerializeAsAttribute => false;
@@ -26,12 +29,12 @@ namespace MapXML.Behaviors
 
         internal override void InjectValue(IXMLInternalContext context, object value)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Cannot inject a value into an {nameof(IEnumerable)} member");
         }
 
         internal override string GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Attribute: {AttributeName} - {ExceptionMessage_NoDirectSerialization}");
         }
 
         internal override IEnumerable<object> GetChildrenToSerialize(IXMLInternalContext context, string NodeName)
@@ -49,12 +52,13 @@ namespace MapXML.Behaviors
         }
         internal override object ObtainValue(IXMLInternalContext context)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
 
         internal override string GetTextContentToSerialize(IXMLInternalContext context)
         {
-            throw new NotSupportedException();
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
+
     }
 }

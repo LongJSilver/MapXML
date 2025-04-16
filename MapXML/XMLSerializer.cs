@@ -102,10 +102,14 @@ namespace MapXML
             new List<(string name, object item, CultureInfo? culture, int externalOrder, int addOrder)>();
 
         public new ISerializationOptions Options => (ISerializationOptions)base.Options;
-        public XMLSerializer(IXMLSerializationHandler? context, ISerializationOptions? options = null)
+        public XMLSerializer(ISerializationOptions? options = null)
+            : this(null, options ?? new DefaultOptions())
+        { }
+
+        public XMLSerializer(IXMLSerializationHandler? handler, ISerializationOptions? options = null)
             : base(options ?? new DefaultOptions())
         {
-            this._handler = context;
+            this._handler = handler;
         }
 
         public void AddItem(string NodeName, object item, int order = 0, string? formatName = null)
@@ -136,6 +140,9 @@ namespace MapXML
 
 
             cult = this.Options.Culture ?? CultureInfo.CurrentCulture;
+            try
+            {
+
 
             _sb.Clear();
             ClearStack();
@@ -161,7 +168,7 @@ namespace MapXML
 
                 foreach (var firstLevelItem in toSerialize)
                 {
-                    Push(XMLNodeBehaviorProfile.CreateSerializationNode((IXMLSerializationHandler?)null, this.Options,
+                        Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.Options,
                         firstLevelItem.name, firstLevelItem.item.GetType(),
                         firstLevelItem.item, firstLevelItem.formatName));
                     WriteCurrentNodeCreate(xmlWriter);
@@ -172,6 +179,16 @@ namespace MapXML
                 {
                     xmlWriter.WriteEndElement();
                 }
+            }
+        }
+            catch (Exception e)
+            {
+                Throw("Serialization failed", e);
+#if NETSTANDARD2_0
+                // just to let the compiler know we can't get past this point
+                // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
+                return;
+#endif
             }
         }
 

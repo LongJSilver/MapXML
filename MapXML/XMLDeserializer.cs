@@ -85,13 +85,24 @@ namespace MapXML
             {
                 if (!ContextStack.IsCreation)
                 {
-                    throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, $"Only 'Create' nodes can have children nodes");
+                    Throw($"Only 'Create' nodes can have children nodes");
+#if NETSTANDARD2_0
+                    // just to let the compiler know we can't get past this point
+                    // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
+                    return;
+#endif
                 }
                 object? currentObject = null;
                 bool shouldAbsorbAttributes;
                 IXMLSerializationHandler? newHandler = null; //No mechanism right now to introduce a new handler
-                if (!ContextStack.InfoForNode(nodeName, attributes, out DeserializationPolicy nodePolicy, out Type? targetType))
-                    throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, $"No context was found for element <{nodeName}>");
+                if (!ContextStack.InfoForNode(nodeName, attributes, out nodePolicy, out targetType))
+                {
+                    Throw($"No context was found for element <{nodeName}>");
+#if NETSTANDARD2_0
+                    // just to let the compiler know we can't get past this point
+                    // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
+                    return;
+#endif
 
                 if (nodePolicy == DeserializationPolicy.Create)
                 {
@@ -158,8 +169,14 @@ namespace MapXML
                                 if (ContextStack.Lookup_FromAttribute(nodeName, AttributeName, AttributeValue, attTargetType, out object? lookedUpValue))
                                     ContextStack.ProcessValue(nodeName, AttributeName, lookedUpValue);
                                 else
-                                    throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath,
-                                        $"Lookup failed for attribute named <{AttributeName}>");
+                            {
+                                Throw($"Lookup failed for attribute named <{AttributeName}>");
+#if NETSTANDARD2_0
+                                // just to let the compiler know we can't get past this point
+                                // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
+                                return;
+#endif
+                            }
                             }
                             else
                                 throw new NotSupportedException($"Unknown {nameof(DeserializationPolicy)} : <{attPolicy}>");
@@ -185,7 +202,12 @@ namespace MapXML
             }
             catch (Exception e)
             {
-                throw new XMLSerializationException(CurrentNodeName, CurrentLevel, CurrentPath, e);
+                Throw($"Error on node end: <{name}>", e);
+#if NETSTANDARD2_0
+                // just to let the compiler know we can't get past this point
+                // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
+                return;
+#endif
             }
             Pop();
         }
@@ -199,7 +221,12 @@ namespace MapXML
             }
             catch (Exception e)
             {
-                throw new XMLSerializationException(CurrentNodeName, CurrentLevel, CurrentPath, e);
+                Throw("Error while parsing inner text content", e);
+#if NETSTANDARD2_0
+                // just to let the compiler know we can't get past this point
+                // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
+                return;
+#endif
             }
 
         }
