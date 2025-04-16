@@ -41,14 +41,14 @@ namespace MapXML
                     {
                         if (beh.CanDeserialize)
                             forAttributes_forDes.Add(beh.NodeName, beh);
-                        if (beh.CanSerialize)
+                        if (beh.CanSerializeAsAttribute)
                             forAttributes_forSer.Add(beh.NodeName, beh);
                     }
                     if (beh.SourceType.HasFlag(XmlSourceType.Child))
                     {
                         if (beh.CanDeserialize)
                             forChildren_forDes.Add(beh.NodeName, beh);
-                        if (beh.CanSerialize)
+                        if (beh.CanSerializeAsChild)
                             forChildren_forSer.Add(beh.NodeName, beh);
 
                     }
@@ -60,7 +60,7 @@ namespace MapXML
                                 throw new ArgumentException($"Type <{t.Name}> declared more than one TextContent behavior.");
                             tc_forDes = beh;
                         }
-                        if (beh.CanSerialize)
+                        if (beh.CanSerializeAsTextContent)
                         {
                             if (tc_forSer != null)
                                 throw new ArgumentException($"Type <{t.Name}> declared more than one TextContent behavior.");

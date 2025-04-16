@@ -28,15 +28,15 @@ namespace MapXML.Behaviors
         protected readonly AbstractXMLMemberAttribute? _attribute;
 
         public readonly MemberInfo Member;
-        public bool CanSerialize => _canSerialize && (CanSerializeAsAttribute || CanSerializeAsChild || CanSerializeAsTextContent);
+        public bool CanSerialize => (CanSerializeAsAttribute || CanSerializeAsChild || CanSerializeAsTextContent);
         public bool CanDeserialize => _canDeserialize;
         private readonly bool _canSerialize;
         private readonly bool _canDeserialize;
-        internal bool CanSerializeAsAttribute => InternalCanSerializeAsAttribute && SourceType.HasFlag(XmlSourceType.Attribute);
-        internal bool CanSerializeAsTextContent => InternalCanSerializeAsTextContent && SourceType.HasFlag(XmlSourceType.TextContent);
-        internal bool CanSerializeAsChild => InternalCanSerializeAsChild && SourceType.HasFlag(XmlSourceType.Child);
 
         internal abstract string GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName);
+        internal bool CanSerializeAsAttribute => _canSerialize && InternalCanSerializeAsAttribute && SourceType.HasFlag(XmlSourceType.Attribute);
+        internal bool CanSerializeAsTextContent => _canSerialize && InternalCanSerializeAsTextContent && SourceType.HasFlag(XmlSourceType.TextContent);
+        internal bool CanSerializeAsChild => _canSerialize && InternalCanSerializeAsChild && SourceType.HasFlag(XmlSourceType.Child);
         internal abstract IEnumerable<object> GetChildrenToSerialize(IXMLInternalContext context, string NodeName);
         protected abstract bool InternalCanSerializeAsAttribute { get; }
         protected abstract bool InternalCanSerializeAsChild { get; }
