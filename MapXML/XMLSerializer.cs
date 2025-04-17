@@ -62,6 +62,10 @@ namespace MapXML
         /// <para/>DEFAULT: false
         /// </summary>
         AttributeOmissionPolicy AttributeOmissionPolicy { get; }
+        /// <summary>
+        /// <para/>DEFAULT: UTF8
+        /// </summary>
+        Encoding Encoding { get; }
     }
 
     public interface ISerializationOptionsBuilder : IXMLOptionsBuilder<ISerializationOptionsBuilder>
@@ -80,7 +84,7 @@ namespace MapXML
         /// 
         /// <para/>DEFAULT: false
         /// </summary>
-        public ISerializationOptionsBuilder OmitAttributes (AttributeOmissionPolicy policy);
+        public ISerializationOptionsBuilder OmitAttributes(AttributeOmissionPolicy policy);
 
         /// <summary>
         /// The name of a root node to be included in the serialization process.
@@ -89,6 +93,8 @@ namespace MapXML
         /// <para/>DEFAULT: null
         /// </summary>
         public ISerializationOptionsBuilder WithAdditionalRootNode(string s);
+        public ISerializationOptionsBuilder WithEncoding(Encoding e);
+        public ISerializationOptionsBuilder WithEncoding(string e);
 
         ISerializationOptions Build();
     }
@@ -101,7 +107,8 @@ namespace MapXML
         {
             public bool PreferTextNodesForLookups { get; private set; } = false;
             public AttributeOmissionPolicy AttributeOmissionPolicy { get; private set; } = AttributeOmissionPolicy.AsDictatedByCodeAnnotations;
-            public string? AdditionalRootNode { get; private set; } = null; 
+            public string? AdditionalRootNode { get; private set; } = null;
+            public Encoding Encoding { get; private set; } = Encoding.UTF8;
 
             public ISerializationOptions Build() => this;
 
@@ -124,6 +131,20 @@ namespace MapXML
                 }
                 else
                     throw new ArgumentException($"<{s}> is not a valid xml node name");
+                return this;
+            }
+
+            public ISerializationOptionsBuilder WithEncoding(Encoding e)
+            {
+                this.Encoding = e;
+                return this;
+            }
+
+            public ISerializationOptionsBuilder WithEncoding(string e)
+            {
+                this.Encoding = Encoding.GetEncoding(e);
+                if (Encoding == null)
+                    throw new ArgumentException($"Unable to find Encoding '{e}'");
                 return this;
             }
         }
@@ -176,14 +197,13 @@ namespace MapXML
 
 
             cult = this.Options.Culture ?? CultureInfo.CurrentCulture;
+            Encoding enc = this.Options.Encoding;
             try
             {
-
-
                 _sb.Clear();
                 ClearStack();
-                using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, Encoding.UTF8))
-                using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 }))
+                using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, enc))
+                using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = enc }))
                 {
                     Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, this.Options, Options.AdditionalRootNode, null, true));
 
