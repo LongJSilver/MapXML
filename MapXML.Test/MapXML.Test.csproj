@@ -14,6 +14,7 @@
     <None Remove="DataFiles\NamedTextContent_Create.xml" />
     <None Remove="DataFiles\NamedTextContent_Lookup.xml" />
     <None Remove="DataFiles\Nested.xml" />
+    <None Remove="DataFiles\RootNodeCornerCases.xml" />
     <None Remove="DataFiles\SimpleValues.xml" />
     <None Remove="DataFiles\XMLFunctions.xml" />
   </ItemGroup>
@@ -25,6 +26,8 @@
     <EmbeddedResource Include="DataFiles\NamedTextContent_Create.xml" />
     <EmbeddedResource Include="DataFiles\NamedTextContent_Lookup.xml" />
     <EmbeddedResource Include="DataFiles\Nested.xml" />
+    <EmbeddedResource Include="DataFiles\RootNodeCornerCases_ExtraRoot.xml" />
+    <EmbeddedResource Include="DataFiles\RootNodeCornerCases.xml" />
     <EmbeddedResource Include="DataFiles\SimpleValues.xml" />
     <EmbeddedResource Include="DataFiles\XMLFunctions.xml" />
   </ItemGroup>

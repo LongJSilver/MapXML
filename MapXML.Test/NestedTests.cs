@@ -14,7 +14,7 @@ namespace MapXML.Tests
             DefaultHandler handler = new DefaultHandler();
             handler.Associate<OneNestedChild>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(s, handler, owner:null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner:null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             OneNestedChild svc = handler.GetResults<OneNestedChild>().First(n => n.Name.Equals("Parent"));

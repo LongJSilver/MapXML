@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MovieCollection>
+   <Movie>
+    <Title>The Fellowship of the Ring</Title>
+    <Director>Peter Jackson</Director>
+    <ReleaseYear>2001</ReleaseYear>
+    <Genre>Fantasy</Genre>
+  </Movie>
+  <Movie>
+    <Title>The Two Towers</Title>
+    <Director>Peter Jackson</Director>
+    <ReleaseYear>2002</ReleaseYear>
+    <Genre>Fantasy</Genre>
+    <Prequel>The Fellowship of the Ring</Prequel>
+  </Movie>
+  <Movie>
+    <Title>The Return of the King</Title>
+    <Director>Peter Jackson</Director>
+    <ReleaseYear>2003</ReleaseYear>
+    <Genre>Fantasy</Genre>
+    <Prequel>The Two Towers</Prequel>
+  </Movie>
+</MovieCollection>
