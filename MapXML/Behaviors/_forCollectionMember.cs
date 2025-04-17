@@ -37,7 +37,7 @@ namespace MapXML.Behaviors
             add.Invoke(collection, new object[] { value });
         }
 
-        internal override string GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName)
+        internal override string? GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName)
         {
             throw new InvalidOperationException($"Attribute: {AttributeName} - {ExceptionMessage_NoDirectSerialization}");
         }
@@ -55,14 +55,11 @@ namespace MapXML.Behaviors
             throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
 
-        internal override string ObtainAttributeValue(IXMLInternalContext context)
-        {
-            throw new InvalidOperationException();
-        }
-        internal override object ObtainValue(IXMLInternalContext context)
+        internal override object ObtainValueForLookup(IXMLInternalContext context)
         {
             throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
+
 
     }
 }

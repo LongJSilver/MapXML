@@ -149,7 +149,7 @@ namespace MapXML.Behaviors
                         }
                         else
                         {
-                            object ValueToLookup = beh.ObtainValue(this);
+                            object ValueToLookup = beh.ObtainValueForLookup(this);
                             if (ValueToLookup != null && this.LookupTextContentFor(this.NodeName, beh.TypeToCreate, ValueToLookup, out string? AttributeValue)
                                 )
                                 return AttributeValue;
@@ -220,7 +220,7 @@ namespace MapXML.Behaviors
                         }
                         else
                         {
-                            object ValueToLookup = beh.ObtainValue(this);
+                            object ValueToLookup = beh.ObtainValueForLookup(this);
                             if (ValueToLookup != null && this.LookupAttributeFor(this.NodeName, AttributeName,
                                   beh.TypeToCreate, ValueToLookup, out string? AttributeValue)
                                 )
@@ -599,6 +599,22 @@ namespace MapXML.Behaviors
             }
             else return true;
         }
+        /// <summary>
+        /// During the serialization phase, this method is called when an object member needs to be serialized as a lookup, 
+        /// ie the object itself has been already serialized earlier and we only need to store a value that points to it. 
+        /// More specifically this function is called when the object needs to be serialized as a SINGLE attribute value.
+        /// 
+        /// <para/> To achieve this we first look for a 'Reverse lookup' function defined specifically by the caller for the object's type;
+        /// <para/> then we try and find a 'Lookup' function with a single parameter and try to deduce from its metadata what value we should store;
+        /// <para/> As a third option we try and ask the handler if it can do the job for us.
+        /// <para/> Finally we try and ask our parent up the stack to run this process from scratch recursively.
+        /// </summary>
+        /// <param name="nodeName"></param>
+        /// <param name="attributeName"></param>
+        /// <param name="targetClass"></param>
+        /// <param name="value"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         internal bool LookupAttributeFor(string nodeName, string attributeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result)
         {
             result = null;
@@ -629,6 +645,7 @@ namespace MapXML.Behaviors
             }
             else return true;
         }
+
         internal bool LookupTextContentFor(string nodeName, Type targetClass, object value, [MaybeNullWhen(false)][NotNullWhen(true)] out string? result)
         {
             result = null;

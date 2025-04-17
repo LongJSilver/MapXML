@@ -32,8 +32,6 @@ namespace MapXML.Behaviors
         public bool CanDeserialize => _canDeserialize;
         private readonly bool _canSerialize;
         private readonly bool _canDeserialize;
-
-        internal abstract string GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName);
         internal bool CanSerializeAsAttribute => _canSerialize && InternalCanSerializeAsAttribute && SourceType.HasFlag(XmlSourceType.Attribute);
         internal bool CanSerializeAsTextContent => _canSerialize && InternalCanSerializeAsTextContent && SourceType.HasFlag(XmlSourceType.TextContent);
         internal bool CanSerializeAsChild => _canSerialize && InternalCanSerializeAsChild && SourceType.HasFlag(XmlSourceType.Child);
@@ -41,8 +39,9 @@ namespace MapXML.Behaviors
         protected abstract bool InternalCanSerializeAsAttribute { get; }
         protected abstract bool InternalCanSerializeAsChild { get; }
         protected abstract bool InternalCanSerializeAsTextContent { get; }
-        internal abstract string ObtainAttributeValue(IXMLInternalContext context);
-        internal abstract object ObtainValue(IXMLInternalContext context);
+        internal abstract object? ObtainValueForLookup(IXMLInternalContext context);
+        internal abstract string? GetTextContentToSerialize(IXMLInternalContext context);
+        internal abstract string? GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName);
         internal abstract void InjectValue(IXMLInternalContext context, object value);
 
         //-----------------------------------------------------------------//
@@ -171,7 +170,13 @@ namespace MapXML.Behaviors
                     return new _forEnumerableMember(member, attribute);
                 }
                 else
-                    return new _forMember(member, attribute);
+                {
+                    IEnumerable<ShouldOmitDelegate> filters = member.GetCustomAttributes<XMLOmitAttribute>(true)
+                        .Where(f=> f is XMLOmitWithDelegate)
+                        .OfType<XMLOmitWithDelegate>().Select(f=>(ShouldOmitDelegate)(f.ShouldOmit));                   
+                    
+                    return new _forMember(member, attribute, filters);
+                }
             }
         }
 
@@ -216,8 +221,5 @@ namespace MapXML.Behaviors
             if (t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))) return true;
             return false;
         }
-
-        internal abstract string GetTextContentToSerialize(IXMLInternalContext context);
-
     }
 }

@@ -1,4 +1,5 @@
-﻿using MapXML.Behaviors;
+﻿using MapXML.Attributes;
+using MapXML.Behaviors;
 using MapXML.Utils;
 using System;
 using System.Collections.Generic;
@@ -25,12 +26,27 @@ namespace MapXML
         }
     }
 
-
+    public enum AttributeOmissionPolicy : byte
+    {
+        /// <summary>
+        /// Only omit values annotated with <see cref="XMLOmitAttribute"/>
+        /// </summary>
+        AsDictatedByCodeAnnotations = 0,
+        /// <summary>
+        /// Always omit null attributes (when attribute type is nullable) and attributes with default values (when attribute is of ValueType)
+        /// </summary>
+        AlwaysWhenDefault,
+        /// <summary>
+        /// Always omit null attributes (when attribute type is nullable) but not ValueType attributes with default values
+        /// </summary>
+        AlwaysWhenNull
+    }
     public interface ISerializationOptions : IXMLOptions
     {
         /// <summary>
         /// Whenever a lookup node with ONE single attribute 
         /// needs to be written, opt instead for writing the lookup value as text within the node.
+        /// <para/>DEFAULT: false
         /// </summary>
         public bool PreferTextNodesForLookups { get; }
 
@@ -40,6 +56,12 @@ namespace MapXML
         /// otherwise it is required and its absence will cause an exception to be thrown.
         /// </summary>
         public string? AdditionalRootNode { get; }
+
+        /// <summary>
+        /// Whenever an attribute is null or empty, it will be omitted from the serialization process.
+        /// <para/>DEFAULT: false
+        /// </summary>
+        AttributeOmissionPolicy AttributeOmissionPolicy { get; }
     }
 
     public interface ISerializationOptionsBuilder : IXMLOptionsBuilder<ISerializationOptionsBuilder>
@@ -51,6 +73,14 @@ namespace MapXML
         /// <para/>DEFAULT: false
         /// </summary>
         public ISerializationOptionsBuilder PreferTextNodesForLookups(bool b);
+
+        /// <summary>
+        /// 
+        /// if set to TRUE, Whenever an attribute is null or empty it will be omitted from the serialization process.
+        /// 
+        /// <para/>DEFAULT: false
+        /// </summary>
+        public ISerializationOptionsBuilder OmitAttributes (AttributeOmissionPolicy policy);
 
         /// <summary>
         /// The name of a root node to be included in the serialization process.
@@ -70,13 +100,19 @@ namespace MapXML
         private class DefaultOptions : AbstractOptionsBuilder<ISerializationOptionsBuilder>, ISerializationOptionsBuilder, ISerializationOptions
         {
             public bool PreferTextNodesForLookups { get; private set; } = false;
-            public string? AdditionalRootNode { get; private set; } = null;
+            public AttributeOmissionPolicy AttributeOmissionPolicy { get; private set; } = AttributeOmissionPolicy.AsDictatedByCodeAnnotations;
+            public string? AdditionalRootNode { get; private set; } = null; 
 
             public ISerializationOptions Build() => this;
 
             ISerializationOptionsBuilder ISerializationOptionsBuilder.PreferTextNodesForLookups(bool b)
             {
                 PreferTextNodesForLookups = b;
+                return this;
+            }
+            ISerializationOptionsBuilder ISerializationOptionsBuilder.OmitAttributes(AttributeOmissionPolicy policy)
+            {
+                AttributeOmissionPolicy = policy;
                 return this;
             }
 
@@ -144,43 +180,43 @@ namespace MapXML
             {
 
 
-            _sb.Clear();
-            ClearStack();
-            using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, Encoding.UTF8))
-            using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 }))
-            {
-                Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, this.Options, Options.AdditionalRootNode, null, true));
-
-                ContextStack!.Format = cult;
-
-                if (Options.AdditionalRootNode != null)
+                _sb.Clear();
+                ClearStack();
+                using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, Encoding.UTF8))
+                using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 }))
                 {
-                    xmlWriter.WriteStartElement(Options.AdditionalRootNode);
-                    xmlWriter.WriteAttributeString(FORMAT_PROVIDER_ATTRIBUTE, ContextStack.Format.Name);
-                    Push(Options.AdditionalRootNode);
-                }
+                    Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, this.Options, Options.AdditionalRootNode, null, true));
 
-                IEnumerable<(string name, object item, string? formatName)> toSerialize =
-                    _firstLevelObjects
-                        .OrderBy(s => s.externalOrder)
-                        .ThenBy(s => s.addOrder)
-                        .Select(s => (s.name, s.item, s.culture?.Name));
+                    ContextStack!.Format = cult;
 
-                foreach (var firstLevelItem in toSerialize)
-                {
+                    if (Options.AdditionalRootNode != null)
+                    {
+                        xmlWriter.WriteStartElement(Options.AdditionalRootNode);
+                        xmlWriter.WriteAttributeString(FORMAT_PROVIDER_ATTRIBUTE, ContextStack.Format.Name);
+                        Push(Options.AdditionalRootNode);
+                    }
+
+                    IEnumerable<(string name, object item, string? formatName)> toSerialize =
+                        _firstLevelObjects
+                            .OrderBy(s => s.externalOrder)
+                            .ThenBy(s => s.addOrder)
+                            .Select(s => (s.name, s.item, s.culture?.Name));
+
+                    foreach (var firstLevelItem in toSerialize)
+                    {
                         Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.Options,
-                        firstLevelItem.name, firstLevelItem.item.GetType(),
-                        firstLevelItem.item, firstLevelItem.formatName));
-                    WriteCurrentNodeCreate(xmlWriter);
-                    Pop();
-                }
+                            firstLevelItem.name, firstLevelItem.item.GetType(),
+                            firstLevelItem.item, firstLevelItem.formatName));
+                        WriteCurrentNodeCreate(xmlWriter);
+                        Pop();
+                    }
 
-                if (Options.AdditionalRootNode != null)
-                {
-                    xmlWriter.WriteEndElement();
+                    if (Options.AdditionalRootNode != null)
+                    {
+                        xmlWriter.WriteEndElement();
+                    }
                 }
             }
-        }
             catch (Exception e)
             {
                 Throw("Serialization failed", e);
