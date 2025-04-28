@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace MapXML.Attributes
 {
@@ -48,7 +47,8 @@ namespace MapXML.Attributes
                 if (t.Equals(typeof(string)))
                 {
                     return string.IsNullOrEmpty(sValue);
-                }else
+                }
+                else
                     return v == null;
             }
 

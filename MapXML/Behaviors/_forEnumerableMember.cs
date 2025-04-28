@@ -9,8 +9,8 @@ namespace MapXML.Behaviors
 {
     internal class _forEnumerableMember : XMLMemberBehavior
     {
-        private static readonly string ExceptionMessage_NoDirectSerialization = 
-            $"An {nameof(IEnumerable)} member cannot be serialized directly, it should be flagged with '{nameof(XmlChildAttribute)}' and serialized as a set of children.";
+        private static readonly string ExceptionMessage_NoDirectSerialization =
+            $"An {nameof(IEnumerable)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
 
         private readonly Type _typeToCreate;
         public override Type TypeToCreate => _typeToCreate;

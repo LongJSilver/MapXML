@@ -4,14 +4,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using static MapXML.XmlMapAttribute;
+using static MapXML.XMLMapAttribute;
 
 namespace MapXML.Behaviors
 {
     internal class _forDictionaryMember : XMLMemberBehavior
     {
         private static readonly string ExceptionMessage_NoDirectSerialization
-            = $"A {nameof(IDictionary)} member cannot be serialized directly, it should be flagged with '{nameof(XmlChildAttribute)}' and serialized as a set of children.";
+            = $"A {nameof(IDictionary)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
 
         //-----------------//
         //results cache
@@ -102,8 +102,8 @@ namespace MapXML.Behaviors
         private static object[] EMPTY = new object[0];
         //-----------------//
 
-        private XmlMapAttribute XmlMapAttribute => (this._attribute as XmlMapAttribute)!;
-        private bool IsPrimitiveDictionary => !string.IsNullOrEmpty(XmlMapAttribute.ValueSourceName);
+        private XMLMapAttribute XMLMapAttribute => (this._attribute as XMLMapAttribute)!;
+        private bool IsPrimitiveDictionary => !string.IsNullOrEmpty(XMLMapAttribute.ValueSourceName);
         private readonly Type _valueType;
         private readonly Type _keyType;
         public override Type TypeToCreate => _valueType;
@@ -113,7 +113,7 @@ namespace MapXML.Behaviors
         protected override bool InternalCanSerializeAsTextContent => false;
 
         private readonly ConvertFromString _KeyConversion;
-        public _forDictionaryMember(MemberInfo member, XmlMapAttribute attribute, Type KeyType, Type ValueType)
+        public _forDictionaryMember(MemberInfo member, XMLMapAttribute attribute, Type KeyType, Type ValueType)
           : base(member, attribute)
         {
             var t = member.FieldOrPropertyType();
@@ -141,19 +141,19 @@ namespace MapXML.Behaviors
             object? Key = null;
             object value = Convert(context, AttributeValue);
 
-            switch (XmlMapAttribute.KeySourceType)
+            switch (XMLMapAttribute.KeySourceType)
             {
-                case XmlMapAttribute.KeySourceTypes.ObjectMember:
-                    Key = FindKey(_keyType, value, XmlMapAttribute.KeySourceName, value);
+                case XMLMapAttribute.KeySourceTypes.ObjectMember:
+                    Key = FindKey(_keyType, value, XMLMapAttribute.KeySourceName, value);
                     break;
-                case XmlMapAttribute.KeySourceTypes.ParentMember:
-                    Key = FindKey(_keyType, context.GetCurrentInstance(), XmlMapAttribute.KeySourceName, value);
+                case XMLMapAttribute.KeySourceTypes.ParentMember:
+                    Key = FindKey(_keyType, context.GetCurrentInstance(), XMLMapAttribute.KeySourceName, value);
                     break;
-                case XmlMapAttribute.KeySourceTypes.NodeAttribute:
+                case XMLMapAttribute.KeySourceTypes.NodeAttribute:
                     Key = AttributeName;
                     break;
                 default:
-                    throw new NotImplementedException($"{nameof(KeySourceTypes)} value '{XmlMapAttribute.KeySourceType}' is not recognized");
+                    throw new NotImplementedException($"{nameof(KeySourceTypes)} value '{XMLMapAttribute.KeySourceType}' is not recognized");
             }
             Inject(context, Key, value);
         }
@@ -179,19 +179,19 @@ namespace MapXML.Behaviors
             object Key;
             object value = childNodeResult;
 
-            switch (XmlMapAttribute.KeySourceType)
+            switch (XMLMapAttribute.KeySourceType)
             {
-                case XmlMapAttribute.KeySourceTypes.ObjectMember:
-                    Key = FindKey(_keyType, value, XmlMapAttribute.KeySourceName, value);
+                case XMLMapAttribute.KeySourceTypes.ObjectMember:
+                    Key = FindKey(_keyType, value, XMLMapAttribute.KeySourceName, value);
                     break;
-                case XmlMapAttribute.KeySourceTypes.ParentMember:
-                    Key = FindKey(_keyType, context.GetCurrentInstance(), XmlMapAttribute.KeySourceName, value);
+                case XMLMapAttribute.KeySourceTypes.ParentMember:
+                    Key = FindKey(_keyType, context.GetCurrentInstance(), XMLMapAttribute.KeySourceName, value);
                     break;
-                case XmlMapAttribute.KeySourceTypes.NodeAttribute:
-                    Key = childAttributes[XmlMapAttribute.KeySourceName];
+                case XMLMapAttribute.KeySourceTypes.NodeAttribute:
+                    Key = childAttributes[XMLMapAttribute.KeySourceName];
                     break;
                 default:
-                    throw new ArgumentNullException($"Key source '{XmlMapAttribute.KeySourceType}' is unknown.");
+                    throw new ArgumentNullException($"Key source '{XMLMapAttribute.KeySourceType}' is unknown.");
             }
             Inject(context, Key, value);
         }
@@ -210,7 +210,7 @@ namespace MapXML.Behaviors
                 {
                     string sKey = (string)ConversionToString(key, context.FormatProvider);
 
-                    yield return new PrimitiveDictionaryEntry(XmlMapAttribute.KeySourceName, sKey, XmlMapAttribute.ValueSourceName, ConvertBack(context, dict[key]));
+                    yield return new PrimitiveDictionaryEntry(XMLMapAttribute.KeySourceName, sKey, XMLMapAttribute.ValueSourceName, ConvertBack(context, dict[key]));
                 }
             }
             else

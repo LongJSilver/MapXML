@@ -129,45 +129,45 @@ namespace MapXML.Tests
         }
         private class OneNestedChild
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float;
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
 
-            [XmlChild("SimpleValue")]
+            [XMLChild("SimpleValue")]
             private OneNestedChild _child;
             public OneNestedChild Child => _child;
         }
         private class NestedChildrenArray
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float;
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
 
-            [XmlChild("SimpleValue")]
+            [XMLChild("SimpleValue")]
             public NestedChildrenArray[] Children;
         }
         private class NestedChildrenCollection
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float;
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
 
-            [XmlChild("SimpleValue")]
+            [XMLChild("SimpleValue")]
             public ICollection<NestedChildrenCollection> Children;
 
             public NestedChildrenCollection()
@@ -177,16 +177,16 @@ namespace MapXML.Tests
         }
         private class NestedChildrenDictionary
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float;
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
 
-            [XmlMap("SimpleValue", XmlSourceType.Child, XmlMapAttribute.KeySourceTypes.NodeAttribute, "Number")]
+            [XMLMap("SimpleValue", XMLSourceType.Child, XMLMapAttribute.KeySourceTypes.NodeAttribute, "Number")]
             public IDictionary<double, NestedChildrenDictionary> Children;
 
             public NestedChildrenDictionary()

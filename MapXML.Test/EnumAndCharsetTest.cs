@@ -43,25 +43,25 @@ namespace MapXML.Tests
                 Two
             }
 
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
-            [XmlAttribute("Double")]
+            [XMLAttribute("Double")]
             public double Number;
 
-            [XmlAttribute("EnumValue")]
+            [XMLAttribute("EnumValue")]
             internal Values EnumVariable;
         }
         private class EncoderClass
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float;
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
         }
 

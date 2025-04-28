@@ -11,7 +11,7 @@ namespace MapXML
     {
         /// <summary>
         /// IF True, allows the Serializer/Deserializer to process Fields and Properties 
-        /// which have no explicit XmlMemberAttribute defined. These fields and properties
+        /// which have no explicit XMLMemberAttribute defined. These fields and properties
         /// will be treated as attributes of the parent node, with the same name as the field itself
         /// </summary>
         public bool AllowImplicitFields { get; }
@@ -22,7 +22,7 @@ namespace MapXML
     {
         /// <summary>
         /// IF True, allows the Serializer/Deserializer to process Fields and Properties 
-        /// which have no explicit XmlMemberAttribute defined. These fields and properties
+        /// which have no explicit XMLMemberAttribute defined. These fields and properties
         /// will be treated as attributes of the parent node, with the same name as the field itself
         /// </summary>
         public T AllowImplicitFields(bool b);
@@ -33,7 +33,7 @@ namespace MapXML
 
     public abstract class XMLSerializerBase
     {
-        public static bool IsValidXmlNodeName(string? nodeName)
+        public static bool IsValidXMLNodeName(string? nodeName)
         {
             if (string.IsNullOrWhiteSpace(nodeName)) return false;
             try

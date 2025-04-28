@@ -8,21 +8,21 @@ using System.Reflection;
 
 namespace MapXML
 {
-    internal class XmlParameterMap
+    internal class XMLParameterMap
     {
         public readonly string AttributeName;
         public readonly ConvertFromString? ConversionFromString;
         public readonly ConvertToString? ConversionToString;
         public readonly Type TargetType;
 
-        public XmlParameterMap(string attributeName, Type type)
+        public XMLParameterMap(string attributeName, Type type)
         {
             AttributeName = attributeName;
             this.TargetType = type;
             this.ConversionFromString = XMLNodeBehaviorProfile.CreateStandardConversionFromString(type);
             this.ConversionToString = XMLNodeBehaviorProfile.CreateStandardConversionToString(type);
         }
-        public XmlParameterMap(string attributeName, Type type, ConvertFromString? conversionFromString, ConvertToString? conversionToString) : this(attributeName, type)
+        public XMLParameterMap(string attributeName, Type type, ConvertFromString? conversionFromString, ConvertToString? conversionToString) : this(attributeName, type)
         {
             this.ConversionFromString = conversionFromString ?? XMLNodeBehaviorProfile.CreateStandardConversionFromString(type);
             this.ConversionToString = conversionToString ?? XMLNodeBehaviorProfile.CreateStandardConversionToString(type);
@@ -36,7 +36,7 @@ namespace MapXML
     /// </summary>
     internal class XMLFunction
     {
-        XmlParameterMap[] _parameterMapping;
+        XMLParameterMap[] _parameterMapping;
         public readonly bool IsSingleParameter;
         public readonly bool IsConverter;
 
@@ -46,7 +46,7 @@ namespace MapXML
         {
             this._method = method;
             var param = method.GetParameters();
-            _parameterMapping = new XmlParameterMap[param.Length];
+            _parameterMapping = new XMLParameterMap[param.Length];
             this.IsSingleParameter = param.Length == 1;
             IsConverter = param.Length == 2 && (!typeof(void).Equals(ReturnType)) && param[0].ParameterType.Equals(typeof(string))
                                                                                             && param[1].ParameterType.Equals(typeof(IFormatProvider));
@@ -80,18 +80,18 @@ namespace MapXML
                         }
                     }
 
-                    _parameterMapping[i] = new XmlParameterMap(attr.AttributeName, p.ParameterType, conv, convBack);
+                    _parameterMapping[i] = new XMLParameterMap(attr.AttributeName, p.ParameterType, conv, convBack);
                     mappedParameters++;
                 }
                 else
                 {
-                    _parameterMapping[i] = new XmlParameterMap(p.Name, p.ParameterType, null, null);
+                    _parameterMapping[i] = new XMLParameterMap(p.Name, p.ParameterType, null, null);
                     mappedParameters++;
                 }
             }
         }
 
-        private object ConvertParameterFromString(IXMLInternalContext context, object functionInstance, string paramValue, XmlParameterMap paramInfo)
+        private object ConvertParameterFromString(IXMLInternalContext context, object functionInstance, string paramValue, XMLParameterMap paramInfo)
         {
             if (paramInfo.ConversionFromString != null)
             {
@@ -106,7 +106,7 @@ namespace MapXML
             throw new InvalidOperationException($"Unable to convert param {paramInfo.AttributeName}");
         }
 
-        private string ConvertParameterToString(IXMLInternalContext context, object functionInstance, object paramValue, XmlParameterMap paramInfo)
+        private string ConvertParameterToString(IXMLInternalContext context, object functionInstance, object paramValue, XMLParameterMap paramInfo)
         {
             if (paramInfo.ConversionToString != null)
             {
@@ -226,7 +226,7 @@ namespace MapXML
         internal float GetParameterMatchScore(ISet<string> attributes)
         {
             int count = 0;
-            foreach (XmlParameterMap item in this._parameterMapping)
+            foreach (XMLParameterMap item in this._parameterMapping)
             {
                 if (attributes.Contains(item.AttributeName))
                     count++;

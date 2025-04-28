@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace MapXML
 {
-    internal class XmlStaticClassData
+    internal class XMLStaticClassData
     {
         public readonly Type Type;
         public readonly IReadOnlyDictionary<string, XMLMemberBehavior> _attributeBehaviors_forDes;
@@ -21,7 +21,7 @@ namespace MapXML
         private IEnumerable<XMLFunction> _functions;
         public IEnumerable<XMLMemberBehavior> AllAttributes_ForDes => (_childBehaviors_forDes.Values).Union(_attributeBehaviors_forDes.Values).Distinct();
         public IEnumerable<XMLMemberBehavior> AllAttributes_ForSer => (_childBehaviors_forSer.Values).Union(_attributeBehaviors_forSer.Values).Distinct();
-        public XmlStaticClassData(Type t, IEnumerable<XMLMemberBehavior> behaviors, IEnumerable<XMLFunction> functions)
+        public XMLStaticClassData(Type t, IEnumerable<XMLMemberBehavior> behaviors, IEnumerable<XMLFunction> functions)
         {
             this.Type = t;
             var forAttributes_forDes = new CIDictionary<XMLMemberBehavior>();
@@ -37,14 +37,14 @@ namespace MapXML
             XMLMemberBehavior? tc_forSer = null;
             behaviors.ForEach(beh =>
                 {
-                    if (beh.SourceType.HasFlag(XmlSourceType.Attribute))
+                    if (beh.SourceType.HasFlag(XMLSourceType.Attribute))
                     {
                         if (beh.CanDeserialize)
                             forAttributes_forDes.Add(beh.NodeName, beh);
                         if (beh.CanSerializeAsAttribute)
                             forAttributes_forSer.Add(beh.NodeName, beh);
                     }
-                    if (beh.SourceType.HasFlag(XmlSourceType.Child))
+                    if (beh.SourceType.HasFlag(XMLSourceType.Child))
                     {
                         if (beh.CanDeserialize)
                             forChildren_forDes.Add(beh.NodeName, beh);
@@ -52,7 +52,7 @@ namespace MapXML
                             forChildren_forSer.Add(beh.NodeName, beh);
 
                     }
-                    if (beh.SourceType.HasFlag(XmlSourceType.TextContent))
+                    if (beh.SourceType.HasFlag(XMLSourceType.TextContent))
                     {
                         if (beh.CanDeserialize)
                         {

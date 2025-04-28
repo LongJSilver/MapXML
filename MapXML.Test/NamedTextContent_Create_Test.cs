@@ -92,7 +92,7 @@ namespace MapXML.Tests
 
         private class AnimalClasses
         {
-            [XmlChild("AnimalClass")]
+            [XMLChild("AnimalClass")]
             public List<AnimalClass> Classes { get; set; }
 
 
@@ -104,13 +104,13 @@ namespace MapXML.Tests
 
         public class AnimalClass
         {
-            [XmlAttribute]
+            [XMLAttribute]
             public string Type { get; set; }
-            [XmlChild]
+            [XMLChild]
             public AnimalInfo AnimalInfo { get; set; }
-            [XmlChild]
+            [XMLChild]
             public AnimalDetails AnimalDetails { get; set; }
-            [XmlChild]
+            [XMLChild]
             public ClassInfo ClassInfo { get; set; }
 
 
@@ -142,23 +142,23 @@ namespace MapXML.Tests
 
         public class AnimalInfo
         {
-            [XmlChild]
+            [XMLChild]
             public string Habitat { get; set; }
         }
 
         public class AnimalDetails
         {
-            [XmlChild]
+            [XMLChild]
             public Guid UniqueID { get; set; }
-            [XmlChild]
+            [XMLChild]
             public string NameTemplate { get; set; }
-            [XmlChild]
+            [XMLChild]
             public RelationDetails RelationDetails { get; set; }
         }
 
         public class RelationDetails
         {
-            [XmlChild]
+            [XMLChild]
             public List<Relation> Relations { get; set; }
             public RelationDetails()
             {
@@ -169,15 +169,15 @@ namespace MapXML.Tests
 
         public class Relation
         {
-            [XmlChild]
+            [XMLChild]
             public Guid ParentID { get; set; }
-            [XmlChild]
+            [XMLChild]
             public string RelationType { get; set; }
         }
 
         public class ClassInfo
         {
-            [XmlChild("Class")]
+            [XMLChild("Class")]
             public List<Class> Classes { get; set; }
             public ClassInfo()
             {
@@ -187,9 +187,9 @@ namespace MapXML.Tests
 
         public class Class
         {
-            [XmlChild]
+            [XMLChild]
             public Guid ClassID { get; set; }
-            [XmlChild]
+            [XMLChild]
             public string Habitat { get; set; }
         }
 

@@ -39,7 +39,7 @@ namespace MapXML.Sample
         public class Library
         {
             // A collection to hold all Book objects
-            [XmlChild("Book")]
+            [XMLChild("Book")]
             public List<Book> Books { get; set; } = new List<Book>();
         }
 

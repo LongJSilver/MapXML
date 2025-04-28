@@ -50,7 +50,7 @@ namespace MapXML.Utils
 
         public void Read()
         {
-            while ((this.reader.Read()))
+            while (this.reader.Read())
             {
                 switch (this.reader.NodeType)
                 {

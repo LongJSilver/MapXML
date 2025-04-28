@@ -14,7 +14,7 @@ namespace MapXML.Behaviors
         public string NodeName => _attribute?.NodeName ?? this.Member.Name;
         public abstract Type TypeToCreate { get; }
         public int SerializationOrder { get; set; } = int.MaxValue;
-        public XmlSourceType SourceType { get; }
+        public XMLSourceType SourceType { get; }
         internal DeserializationPolicy Policy { get; }
         private ConvertFromString? _conversionFromString_nullable;
         private ConvertToString? _conversionToString_nullable;
@@ -32,9 +32,9 @@ namespace MapXML.Behaviors
         public bool CanDeserialize => _canDeserialize;
         private readonly bool _canSerialize;
         private readonly bool _canDeserialize;
-        internal bool CanSerializeAsAttribute => _canSerialize && InternalCanSerializeAsAttribute && SourceType.HasFlag(XmlSourceType.Attribute);
-        internal bool CanSerializeAsTextContent => _canSerialize && InternalCanSerializeAsTextContent && SourceType.HasFlag(XmlSourceType.TextContent);
-        internal bool CanSerializeAsChild => _canSerialize && InternalCanSerializeAsChild && SourceType.HasFlag(XmlSourceType.Child);
+        internal bool CanSerializeAsAttribute => _canSerialize && InternalCanSerializeAsAttribute && SourceType.HasFlag(XMLSourceType.Attribute);
+        internal bool CanSerializeAsTextContent => _canSerialize && InternalCanSerializeAsTextContent && SourceType.HasFlag(XMLSourceType.TextContent);
+        internal bool CanSerializeAsChild => _canSerialize && InternalCanSerializeAsChild && SourceType.HasFlag(XMLSourceType.Child);
         internal abstract IEnumerable<object> GetChildrenToSerialize(IXMLInternalContext context, string NodeName);
         protected abstract bool InternalCanSerializeAsAttribute { get; }
         protected abstract bool InternalCanSerializeAsChild { get; }
@@ -47,7 +47,7 @@ namespace MapXML.Behaviors
         //-----------------------------------------------------------------//
 
 #pragma warning disable CS8618 
-        protected XMLMemberBehavior(MemberInfo member, XmlSourceType source, DeserializationPolicy policy)
+        protected XMLMemberBehavior(MemberInfo member, XMLSourceType source, DeserializationPolicy policy)
         {
             this.Member = member;
             this.SourceType = source;
@@ -56,7 +56,7 @@ namespace MapXML.Behaviors
         }
 
         protected XMLMemberBehavior(MemberInfo member, AbstractXMLMemberAttribute? attribute)
-            : this(member, attribute?.SourceType ?? XmlSourceType.ChildOrAttribute, attribute?.Policy ?? DeserializationPolicy.Create)
+            : this(member, attribute?.SourceType ?? XMLSourceType.ChildOrAttribute, attribute?.Policy ?? DeserializationPolicy.Create)
         {
             this._attribute = attribute;
             if (attribute != null)
@@ -153,7 +153,7 @@ namespace MapXML.Behaviors
             else
             {
                 Type t = member.FieldOrPropertyType();
-                if (attribute is XmlMapAttribute xma && IsDictionaryType(t, out var KeyType, out var ValueType))
+                if (attribute is XMLMapAttribute xma && IsDictionaryType(t, out var KeyType, out var ValueType))
                 {
                     return new _forDictionaryMember(member, xma, KeyType, ValueType);
                 }
@@ -172,9 +172,9 @@ namespace MapXML.Behaviors
                 else
                 {
                     IEnumerable<ShouldOmitDelegate> filters = member.GetCustomAttributes<XMLOmitAttribute>(true)
-                        .Where(f=> f is XMLOmitWithDelegate)
-                        .OfType<XMLOmitWithDelegate>().Select(f=>(ShouldOmitDelegate)(f.ShouldOmit));                   
-                    
+                        .Where(f => f is XMLOmitWithDelegate)
+                        .OfType<XMLOmitWithDelegate>().Select(f => (ShouldOmitDelegate)(f.ShouldOmit));
+
                     return new _forMember(member, attribute, filters);
                 }
             }

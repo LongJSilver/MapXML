@@ -3,7 +3,6 @@ using MapXML.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Reflection;
 
 namespace MapXML.Behaviors
@@ -11,7 +10,7 @@ namespace MapXML.Behaviors
     internal class _forCollectionMember : XMLMemberBehavior
     {
         private static readonly string ExceptionMessage_NoDirectSerialization
-            = $"A {nameof(ICollection)} member cannot be serialized directly, it should be flagged with '{nameof(XmlChildAttribute)}' and serialized as a set of children.";
+            = $"A {nameof(ICollection)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
 
         private readonly Type _typeToCreate;
         public override Type TypeToCreate => _typeToCreate;

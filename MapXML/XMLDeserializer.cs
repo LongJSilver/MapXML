@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Xml.Linq;
 
 namespace MapXML
 {
@@ -29,6 +28,7 @@ namespace MapXML
         /// An instance of the default options for the deserializer, with the exception of the <see cref="IDeserializationOptions.IgnoreRootNode"/> value which is set to true
         /// </summary>
         public static IDeserializationOptions DefaultOptions_IgnoreRootNode { get; } = OptionsBuilder().IgnoreRootNode(true).Build();
+
         public static IDeserializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
         private class DefaultOptions : AbstractOptionsBuilder<IDeserializationOptionsBuilder>, IDeserializationOptions, IDeserializationOptionsBuilder
         {
@@ -50,14 +50,14 @@ namespace MapXML
 
         public new IDeserializationOptions Options => (IDeserializationOptions)base.Options;
 
-        public XMLDeserializer(string XmlString, IDeserializationOptions? Options = null)
-            : this(XmlString, Handler: null, RootNodeOwner: null, Options)
+        public XMLDeserializer(string XMLString, IDeserializationOptions? Options = null)
+            : this(XMLString, Handler: null, RootNodeOwner: null, Options)
         { }
-        public XMLDeserializer(string XmlString, IXMLSerializationHandler? Handler, IDeserializationOptions? Options = null)
-            : this(XmlString, Handler: null, RootNodeOwner: null, Options)
+        public XMLDeserializer(string XMLString, IXMLSerializationHandler? Handler, IDeserializationOptions? Options = null)
+            : this(XMLString, Handler: null, RootNodeOwner: null, Options)
         { }
-        public XMLDeserializer(string XmlString, IXMLSerializationHandler? Handler, object? RootNodeOwner = null, IDeserializationOptions? Options = null)
-            : this(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(XmlString)), Handler, RootNodeOwner: RootNodeOwner, Options)
+        public XMLDeserializer(string XMLString, IXMLSerializationHandler? Handler, object? RootNodeOwner = null, IDeserializationOptions? Options = null)
+            : this(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(XMLString)), Handler, RootNodeOwner: RootNodeOwner, Options)
         { }
         public XMLDeserializer(Stream source, IDeserializationOptions? Options = null)
             : this(source, Handler: null, RootNodeOwner: null, Options)

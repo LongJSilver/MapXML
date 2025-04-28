@@ -2,10 +2,10 @@
 
 namespace MapXML.Attributes
 {
-    public class XmlTextContentAttribute : AbstractXMLMemberAttribute
+    public class XMLTextContentAttribute : AbstractXMLMemberAttribute
     {
-        public XmlTextContentAttribute([CallerMemberName] string xmlAttributeName = "", DeserializationPolicy policy = DeserializationPolicy.Create)
-             : base(xmlAttributeName, XmlSourceType.TextContent, policy)
+        public XMLTextContentAttribute([CallerMemberName] string xmlAttributeName = "", DeserializationPolicy policy = DeserializationPolicy.Create)
+             : base(xmlAttributeName, XMLSourceType.TextContent, policy)
         {
 
         }

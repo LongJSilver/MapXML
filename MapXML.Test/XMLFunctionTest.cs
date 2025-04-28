@@ -116,16 +116,16 @@ namespace MapXML.Tests
 
         private class Test_WithLookup
         {
-            [XmlChild("Prop")]
+            [XMLChild("Prop")]
             private List<Prop> _props = new List<Prop>();
 
-            [XmlChild("Cls", DeserializationPolicy.Create, CanSerialize = true, CanDeserialize = false)]
+            [XMLChild("Cls", DeserializationPolicy.Create, CanSerialize = true, CanDeserialize = false)]
             private List<Cls> _cls = new List<Cls>();
             [XMLNonSerialized]
             public IEnumerable<Prop> Properties => _props;
             [XMLNonSerialized]
             public IEnumerable<Cls> Classes => _cls;
-            [XmlChild("Cls")]
+            [XMLChild("Cls")]
             public void AddClass(Cls c)
             {
                 _cls.Add(c);
@@ -143,7 +143,7 @@ namespace MapXML.Tests
             public string Name;
             public string Desc;
 
-            [XmlChild("Prop", DeserializationPolicy.Lookup)]
+            [XMLChild("Prop", DeserializationPolicy.Lookup)]
             public List<Prop> Props = new List<Prop>();
         }
 

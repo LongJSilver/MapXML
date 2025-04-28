@@ -23,9 +23,9 @@ namespace MapXML.Tests
         }
         internal class MixedContent
         {
-            [XmlChild("f")]
+            [XMLChild("f")]
             public List<F> Children { get; set; }
-            [XmlTextContent()]
+            [XMLTextContent()]
             public string Text;
             public MixedContent()
             {
@@ -76,31 +76,31 @@ namespace MapXML.Tests
         }
         private class SimpleValueClass
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer;
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float;
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double;
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name;
 
-            [XmlTextContent]
+            [XMLTextContent]
             public DateTime Date;
         }
         private class SimpleValuePropsClass
         {
-            [XmlAttribute("Number")]
+            [XMLAttribute("Number")]
             public int Integer { get; set; }
-            [XmlAttribute("Decimal1")]
+            [XMLAttribute("Decimal1")]
             public float Float { get; set; }
-            [XmlAttribute("Decimal2")]
+            [XMLAttribute("Decimal2")]
             public double Double { get; set; }
-            [XmlAttribute("String")]
+            [XMLAttribute("String")]
             public string Name { get; set; }
 
 
-            [XmlTextContent]
+            [XMLTextContent]
             public DateTime Date { get; set; }
 
         }

@@ -22,12 +22,12 @@ namespace MapXML.Behaviors
         internal XMLNodeBehaviorProfile? Parent;
 
         /****** STATIC ******/
-        private XmlStaticClassData? _staticClassData;
+        private XMLStaticClassData? _staticClassData;
 
-        private static Dictionary<Type, XmlStaticClassData> __typeCache =
-                   new Dictionary<Type, XmlStaticClassData>();
+        private static Dictionary<Type, XMLStaticClassData> __typeCache =
+                   new Dictionary<Type, XMLStaticClassData>();
 
-        XmlStaticClassData? IXMLInternalContext.StaticClassData => _staticClassData;
+        XMLStaticClassData? IXMLInternalContext.StaticClassData => _staticClassData;
         public IXMLSerializationHandler? Handler => GetHandler();
         public IDictionary<string, object> CustomData => _customData;
 
@@ -290,7 +290,7 @@ namespace MapXML.Behaviors
                     beh.Init();
                     _behaviors.Add(beh);
                 }
-                __typeCache[t] = data = new XmlStaticClassData(t, _behaviors, _functions);
+                __typeCache[t] = data = new XMLStaticClassData(t, _behaviors, _functions);
             }
             _staticClassData = data;
         }

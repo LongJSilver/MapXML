@@ -127,7 +127,7 @@ namespace MapXML.Tests
 
     public class MovieCollection
     {
-        [XmlChild("Movie")]
+        [XMLChild("Movie")]
         public List<Movie> Movies { get; set; } = new List<Movie>();
 
         [XMLFunction]
@@ -144,7 +144,7 @@ namespace MapXML.Tests
         public int ReleaseYear { get; set; }
         public string Genre { get; set; }
 
-        [XmlChild("Prequel", DeserializationPolicy.Lookup)]
+        [XMLChild("Prequel", DeserializationPolicy.Lookup)]
         public Movie Prequel { get; set; }
     }
 

@@ -50,10 +50,10 @@ namespace MapXML.Tests
 
         private class AnimalClasses
         {
-            [XmlChild("AnimalInfo", SerializationOrder = 2)]
+            [XMLChild("AnimalInfo", SerializationOrder = 2)]
             public List<AnimalInfo> Animals { get; set; }
 
-            [XmlMap("Habitat", XmlSourceType.Child, XmlMapAttribute.KeySourceTypes.ObjectMember, nameof(Habitat.ID), SerializationOrder = 1)]
+            [XMLMap("Habitat", XMLSourceType.Child, XMLMapAttribute.KeySourceTypes.ObjectMember, nameof(Habitat.ID), SerializationOrder = 1)]
             public Dictionary<Guid, Habitat> Habitats { get; set; }
 
             [XMLFunction()]
@@ -69,18 +69,18 @@ namespace MapXML.Tests
 
         public class AnimalInfo
         {
-            [XmlChild("Habitat", DeserializationPolicy.Lookup)]
+            [XMLChild("Habitat", DeserializationPolicy.Lookup)]
             public Habitat Habitat { get; set; }
 
-            [XmlAttribute]
+            [XMLAttribute]
             public string Name { get; set; }
         }
 
         public class Habitat
         {
-            [XmlAttribute]
+            [XMLAttribute]
             public string Name { get; set; }
-            [XmlAttribute]
+            [XMLAttribute]
             public Guid ID { get; set; }
         }
     }

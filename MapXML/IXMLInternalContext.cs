@@ -22,7 +22,7 @@ namespace MapXML
     }
 
     [Flags]
-    public enum XmlSourceType
+    public enum XMLSourceType
     {
         Attribute = 1,
         Child = 2,
@@ -56,7 +56,7 @@ namespace MapXML
         /// <summary>
         /// Gets the static class data associated with the XML context.
         /// </summary>
-        XmlStaticClassData? StaticClassData { get; }
+        XMLStaticClassData? StaticClassData { get; }
 
         IXMLOptions Options { get; }
 
