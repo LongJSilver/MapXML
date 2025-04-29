@@ -3,9 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>10.0</LangVersion>
-    <!-- Oppure "8.0", "10.0", ecc -->
     <Nullable>enable</Nullable>
-    <!-- Abilita i nullable reference types -->
+    <BaseVersion>0.1.0-Alpha</BaseVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,5 +13,47 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>MapXML</PackageId>
+    <Version>$(BaseVersion)</Version>
+    <Authors>Marco Perna</Authors>
+    <Description>A lightweight .NET library designed for mapping and transforming XML structures into strongly-typed objects and vice-versa.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <IncludeSource>true</IncludeSource>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <RepositoryUrl>https://github.com/LongJSilver/MapXML</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/LongJSilver/MapXML</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <Company />
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>XML; Serialization;</PackageTags>
+  </PropertyGroup>
+
+  <!-- Add a conditional property for Debug builds -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <Version>$(BaseVersion)-debug</Version>
+  </PropertyGroup>
+
 
 </Project>

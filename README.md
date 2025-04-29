@@ -5,17 +5,22 @@
 ## Projects
 
 - **MapXML** — Core library
+- **MapXML.Samples** — Samples collection, still a work in progress
 - **MapXML.Test** — Unit test suite using MSTest
 
-## Getting Started
+## 📦 Getting Started
 
-To use MapXML in your project:
+To use MapXML in your project you can either install through NuGet
+
+```sh
+dotnet add package MapXML
+```
+
+or clone and compile along with your project :
 
 ```bash
 git clone https://github.com/LongJSilver/MapXML.git
 ```
-
-Then open the MapXML.sln in Visual Studio or run with the .NET CLI.
 
 ## Sample Use Case
 
@@ -39,7 +44,6 @@ Below is an example that shows a small XML document and its corresponding C# obj
 
 **CLR Objects**
 ``` csharp
-
 using System.Collections.Generic;
 
 namespace MapXMLExample
@@ -66,8 +70,7 @@ namespace MapXMLExample
 
 **Deserialization Code**
 
-``` csharp
-           
+``` csharp           
 //Define options
 IDeserializationOptions opt = 
 XMLDeserializer.OptionsBuilder()
@@ -86,3 +89,10 @@ deserializer.Run();
 IReadOnlyList<Library> results = h.GetResults<Library>();
 
 ```
+
+## 📜 License and notes
+
+**MapXML** is released under Apache 2.0
+
+Despite being released on NuGet it is in the alpha stage, **not stable** and still subject to frequent breaking changes.  
+Feedback, suggestions and contributions are welcome.
