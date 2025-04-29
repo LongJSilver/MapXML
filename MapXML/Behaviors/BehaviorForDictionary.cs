@@ -4,11 +4,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using static MapXML.XMLMapAttribute;
+using static MapXML.Attributes.XMLMapAttribute;
 
 namespace MapXML.Behaviors
 {
-    internal class _forDictionaryMember : XMLMemberBehavior
+    internal sealed class BehaviorForDictionary : XMLMemberBehavior
     {
         private static readonly string ExceptionMessage_NoDirectSerialization
             = $"A {nameof(IDictionary)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
@@ -41,7 +41,7 @@ namespace MapXML.Behaviors
                 bool found = false;
                 foreach (var member in targetType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static))
                 {
-                    if (!member.Name.Equals(KeyFinderName))
+                    if (!member.Name.Equals(KeyFinderName, StringComparison.Ordinal))
                         continue;
                     if (member.IsFieldOrProperty())
                     {
@@ -99,7 +99,7 @@ namespace MapXML.Behaviors
             }
         }
 
-        private static object[] EMPTY = new object[0];
+        private static object[] EMPTY = Array.Empty<object>();
         //-----------------//
 
         private XMLMapAttribute XMLMapAttribute => (this._attribute as XMLMapAttribute)!;
@@ -113,7 +113,7 @@ namespace MapXML.Behaviors
         protected override bool InternalCanSerializeAsTextContent => false;
 
         private readonly ConvertFromString _KeyConversion;
-        public _forDictionaryMember(MemberInfo member, XMLMapAttribute attribute, Type KeyType, Type ValueType)
+        public BehaviorForDictionary(MemberInfo member, XMLMapAttribute attribute, Type KeyType, Type ValueType)
           : base(member, attribute)
         {
             var t = member.FieldOrPropertyType();
@@ -167,7 +167,7 @@ namespace MapXML.Behaviors
 
             object dict = this.Member.GetValue(context.GetCurrentInstance());
             if (dict == null)
-                throw new ArgumentNullException("Target dictionary is null");
+                throw new InvalidOperationException("Target dictionary is null");
             var _addMethod = dict.GetType().GetMethod("Add");
 
             _addMethod.Invoke(dict, new object[] { Key, Value });

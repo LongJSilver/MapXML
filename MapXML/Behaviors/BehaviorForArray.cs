@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MapXML.Behaviors
 {
-    internal class _forArray : XMLMemberBehavior
+    internal sealed class BehaviorForArray : XMLMemberBehavior
     {
         private static readonly string ExceptionMessage_NoDirectSerialization
             = $"An {nameof(Array)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
@@ -21,7 +21,7 @@ namespace MapXML.Behaviors
         protected override bool InternalCanSerializeAsChild => true;
         protected override bool InternalCanSerializeAsTextContent => false;
 
-        public _forArray(MemberInfo member, AbstractXMLMemberAttribute? attribute) : base(member, attribute)
+        public BehaviorForArray(MemberInfo member, AbstractXMLMemberAttribute? attribute) : base(member, attribute)
         {
             _typeToCreate = member.FieldOrPropertyType().GetElementType();
         }

@@ -2,6 +2,7 @@
 
 namespace MapXML.Attributes
 {
+#pragma warning disable CA1051 // Make an exception for fields in attribute subclasses
     [System.AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method)]
     public abstract class AbstractXMLMemberAttribute : Attribute
     {

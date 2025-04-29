@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MapXML
 {
-    internal class XMLParameterMap
+    internal sealed class XMLParameterMap
     {
         public readonly string AttributeName;
         public readonly ConvertFromString? ConversionFromString;
@@ -34,7 +34,7 @@ namespace MapXML
     /// Fornisce le informazioni di mappatura che consentano di invocare un metodo di una classe 
     /// a partire dalle informazioni contenute in uno specifico nodo xml.
     /// </summary>
-    internal class XMLFunction
+    internal sealed class XMLFunction
     {
         XMLParameterMap[] _parameterMapping;
         public readonly bool IsSingleParameter;
@@ -91,7 +91,7 @@ namespace MapXML
             }
         }
 
-        private object ConvertParameterFromString(IXMLInternalContext context, object functionInstance, string paramValue, XMLParameterMap paramInfo)
+        private static object ConvertParameterFromString(IXMLInternalContext context, object functionInstance, string paramValue, XMLParameterMap paramInfo)
         {
             if (paramInfo.ConversionFromString != null)
             {
@@ -106,7 +106,7 @@ namespace MapXML
             throw new InvalidOperationException($"Unable to convert param {paramInfo.AttributeName}");
         }
 
-        private string ConvertParameterToString(IXMLInternalContext context, object functionInstance, object paramValue, XMLParameterMap paramInfo)
+        private static string ConvertParameterToString(IXMLInternalContext context, object functionInstance, object paramValue, XMLParameterMap paramInfo)
         {
             if (paramInfo.ConversionToString != null)
             {

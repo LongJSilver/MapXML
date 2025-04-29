@@ -6,13 +6,13 @@ using System.Reflection;
 
 namespace MapXML.Behaviors
 {
-    internal class _forMethod : XMLMemberBehavior
+    internal sealed class BehaviorForMethod : XMLMemberBehavior
     {
         private static readonly string ExceptionMessage_NoDirectSerialization = $"A 'Method' member cannot be serialized.";
 
         private MethodInfo _method => (this.Member as MethodInfo) ?? throw new ArgumentException("Member is either null or not a method");
 
-        public _forMethod(MethodInfo method, AbstractXMLMemberAttribute? attribute)
+        public BehaviorForMethod(MethodInfo method, AbstractXMLMemberAttribute? attribute)
             : base(method, attribute)
         {
             var param = method.GetParameters();

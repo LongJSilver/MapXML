@@ -2,15 +2,15 @@
 using MapXML.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
 namespace MapXML.Behaviors
 {
-    internal class _forMember : XMLMemberBehavior
+    internal sealed class BehaviorForGenericMember : XMLMemberBehavior
     {
-
-        internal _forMember(MemberInfo m, AbstractXMLMemberAttribute? attribute, IEnumerable<ShouldOmitDelegate>? serializationFilters = null)
+        internal BehaviorForGenericMember(MemberInfo m, AbstractXMLMemberAttribute? attribute, IEnumerable<ShouldOmitDelegate>? serializationFilters = null)
             : base(m, attribute)
         {
             _serializationFilters = new List<ShouldOmitDelegate>();
@@ -82,6 +82,6 @@ namespace MapXML.Behaviors
         internal override string? GetTextContentToSerialize(IXMLInternalContext context)
          => ObtainAttributeValue(context);
 
-        private readonly ICollection<ShouldOmitDelegate> _serializationFilters;
+        private readonly List<ShouldOmitDelegate> _serializationFilters;
     }
 }

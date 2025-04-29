@@ -1,5 +1,6 @@
 ﻿using System;
 
+#pragma warning disable CA1051
 namespace MapXML.Attributes
 {
     [AttributeUsage(AttributeTargets.Parameter)]

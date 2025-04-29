@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,8 +8,23 @@ using System.Xml;
 namespace MapXML.Utils
 {
 
-    public class SaxReader
+    public class SaxReader : IDisposable
     {
+        public void Dispose()
+        {
+            this.reader.Close();
+            this.reader.Dispose();
+            GC.SuppressFinalize(this);
+        }
+        public void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.reader.Close();
+                this.reader.Dispose();
+            }
+        }
+
         public interface ISaxReaderContext
         {
             void NodeStart(string name, Dictionary<string, string> attributes);
@@ -21,7 +37,7 @@ namespace MapXML.Utils
         public delegate void TextContent(string text);
         private readonly Stack<string> _currentPath;
         private readonly string[] _LatestPaths;
-        private int _NextFreePath = 0;
+        private int _NextFreePath;
         public string ReadCurrentNodeAsText()
         {
             this.reader.MoveToElement();
@@ -102,7 +118,7 @@ namespace MapXML.Utils
 
                 {
                     if (sb.Length > 0)
-                        sb.Append(".");
+                        sb.Append('.');
                     sb.Append(elem);
                 }
                 return sb.ToString();

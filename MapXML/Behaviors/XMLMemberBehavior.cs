@@ -148,26 +148,26 @@ namespace MapXML.Behaviors
         {
             if (member is MethodInfo method)
             {
-                return new _forMethod(method, attribute);
+                return new BehaviorForMethod(method, attribute);
             }
             else
             {
                 Type t = member.FieldOrPropertyType();
                 if (attribute is XMLMapAttribute xma && IsDictionaryType(t, out var KeyType, out var ValueType))
                 {
-                    return new _forDictionaryMember(member, xma, KeyType, ValueType);
+                    return new BehaviorForDictionary(member, xma, KeyType, ValueType);
                 }
                 else if (t.IsArray)
                 {
-                    return new _forArray(member, attribute);
+                    return new BehaviorForArray(member, attribute);
                 }
                 else if (IsCollectionType(t))
                 {
-                    return new _forCollectionMember(member, attribute);
+                    return new BehaviorForCollection(member, attribute);
                 }
                 else if (IsEnumerableType(t))
                 {
-                    return new _forEnumerableMember(member, attribute);
+                    return new BehaviororForEnumerable(member, attribute);
                 }
                 else
                 {
@@ -175,7 +175,7 @@ namespace MapXML.Behaviors
                         .Where(f => f is XMLOmitWithDelegate)
                         .OfType<XMLOmitWithDelegate>().Select(f => (ShouldOmitDelegate)(f.ShouldOmit));
 
-                    return new _forMember(member, attribute, filters);
+                    return new BehaviorForGenericMember(member, attribute, filters);
                 }
             }
         }

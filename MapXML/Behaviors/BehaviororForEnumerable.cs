@@ -7,10 +7,10 @@ using System.Reflection;
 
 namespace MapXML.Behaviors
 {
-    internal class _forCollectionMember : XMLMemberBehavior
+    internal sealed class BehaviororForEnumerable : XMLMemberBehavior
     {
-        private static readonly string ExceptionMessage_NoDirectSerialization
-            = $"A {nameof(ICollection)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
+        private static readonly string ExceptionMessage_NoDirectSerialization =
+            $"An {nameof(IEnumerable)} member cannot be serialized directly, it should be flagged with '{nameof(XMLChildAttribute)}' and serialized as a set of children.";
 
         private readonly Type _typeToCreate;
         public override Type TypeToCreate => _typeToCreate;
@@ -18,7 +18,7 @@ namespace MapXML.Behaviors
         protected override bool InternalCanSerializeAsChild => true;
         protected override bool InternalCanSerializeAsTextContent => false;
 
-        public _forCollectionMember(MemberInfo member, AbstractXMLMemberAttribute? attribute)
+        public BehaviororForEnumerable(MemberInfo member, AbstractXMLMemberAttribute? attribute)
           : base(member, attribute)
         {
             var args = new[] { typeof(int) };
@@ -29,11 +29,7 @@ namespace MapXML.Behaviors
 
         internal override void InjectValue(IXMLInternalContext context, object value)
         {
-
-            object collection = Member.GetValue(context.GetCurrentInstance());
-            var add = collection.GetType().GetMethod("Add");
-
-            add.Invoke(collection, new object[] { value });
+            throw new InvalidOperationException($"Cannot inject a value into an {nameof(IEnumerable)} member");
         }
 
         internal override string? GetAttributeToSerialize(IXMLInternalContext context, string NodeName, string AttributeName)
@@ -49,16 +45,16 @@ namespace MapXML.Behaviors
                 yield return item;
             }
         }
-        internal override string GetTextContentToSerialize(IXMLInternalContext context)
-        {
-            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
-        }
 
         internal override object ObtainValueForLookup(IXMLInternalContext context)
         {
             throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
 
+        internal override string GetTextContentToSerialize(IXMLInternalContext context)
+        {
+            throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
+        }
 
     }
 }

@@ -116,7 +116,7 @@ namespace MapXML
         //***************************************************************************//
 
         //Domain: object creation and initiazation
-        bool OverrideCreation(IXMLState state, Type t, [MaybeNullWhen(false)][NotNullWhen(true)] out object? newObjecT);
+        bool OverrideCreation(IXMLState state, Type t, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
         void InjectDependencies(IXMLState state, object newObject);
 
         //*****************//

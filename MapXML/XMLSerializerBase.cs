@@ -49,8 +49,8 @@ namespace MapXML
 
         protected abstract class AbstractOptionsBuilder<T> : IXMLOptionsBuilder<T>, IXMLOptions where T : IXMLOptionsBuilder<T>
         {
-            public CultureInfo? Culture { get; private set; } = null;
-            public bool AllowImplicitFields { get; private set; } = false;
+            public CultureInfo? Culture { get; private set; }
+            public bool AllowImplicitFields { get; private set; }
             T IXMLOptionsBuilder<T>.AllowImplicitFields(bool b)
             {
                 AllowImplicitFields = b;
@@ -79,7 +79,8 @@ namespace MapXML
 
         }
 
-        public const string FORMAT_PROVIDER_ATTRIBUTE = "xml.format";
+        public const string FormatProviderAttributeName = "xml.format";
+
         private XMLNodeBehaviorProfile? _contextStack;
         internal XMLNodeBehaviorProfile ContextStack => _contextStack!;
         protected IXMLOptions Options { get; }
@@ -116,9 +117,9 @@ namespace MapXML
         }
         private readonly Stack<PathElement> _path;
 
-        protected XMLSerializerBase(IXMLOptions opt)
+        protected XMLSerializerBase(IXMLOptions options)
         {
-            Options = opt ?? throw new ArgumentNullException("Options");
+            Options = options ?? throw new ArgumentNullException(nameof(options));
             _path = new Stack<PathElement>();
             _path.Push(new PathElement("", -1, 0, "/"));
         }

@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace MapXML
 {
-    internal class XMLStaticClassData
+    internal sealed class XMLStaticClassData
     {
         public readonly Type Type;
         public readonly IReadOnlyDictionary<string, XMLMemberBehavior> _attributeBehaviors_forDes;

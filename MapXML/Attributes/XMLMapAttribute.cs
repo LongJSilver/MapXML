@@ -1,7 +1,6 @@
-﻿using MapXML.Attributes;
-
-namespace MapXML
+﻿namespace MapXML.Attributes
 {
+#pragma warning disable CA1051 // Make an exception for fields in attribute subclasses
     public class XMLMapAttribute : AbstractXMLMemberAttribute
     {
         public enum KeySourceTypes

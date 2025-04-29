@@ -2,6 +2,7 @@
 
 namespace MapXML
 {
+#pragma warning disable CA1051
     public class XMLSerializationException : Exception
     {
         public readonly string NodeName;

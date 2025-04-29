@@ -11,7 +11,7 @@ using System.Runtime.Serialization;
 
 namespace MapXML.Behaviors
 {
-    internal partial class XMLNodeBehaviorProfile : IXMLInternalContext, IXMLState
+    internal sealed partial class XMLNodeBehaviorProfile : IXMLInternalContext, IXMLState
     {
         object? IXMLState.GetParent(int i)
         {
@@ -39,29 +39,25 @@ namespace MapXML.Behaviors
         /****** Identity ******/
         private readonly IXMLSerializationHandler? _handler;
         internal bool IsCreation { get; private set; }
-        internal CultureInfo? Format { get; set; }
+        internal CultureInfo? Culture { get; set; }
         IFormatProvider? IXMLInternalContext.FormatProvider => GetFormat();
         public int Level { get; set; }
         internal readonly IReadOnlyDictionary<string, string> Attributes;
         /****** STATE ******/
         internal bool EncounteredTextContent => _TextContent != null;
-        private string? _TextContent = null;
+        private string? _TextContent;
 
         internal readonly IDictionary<string, object> _customData;
-        private int ChildrenCount = 0;
+        private int ChildrenCount;
         public object? CurrentInstance { get; set; }
         //--------------------------------------//
-
-
-
-
 
         private IFormatProvider? GetFormat()
         {
             XMLNodeBehaviorProfile prof = this;
-            while (prof.Format == null && prof.Parent != null)
+            while (prof.Culture == null && prof.Parent != null)
                 prof = prof.Parent;
-            return prof?.Format;
+            return prof?.Culture;
         }
         private IXMLSerializationHandler? GetHandler()
         {
@@ -109,7 +105,7 @@ namespace MapXML.Behaviors
         {
             var result = new XMLNodeBehaviorProfile(handler, opt, name, null, item, targetType, true);
             if (formatName != null)
-                result.Format = CultureInfo.GetCultureInfo(formatName);
+                result.Culture = CultureInfo.GetCultureInfo(formatName);
             return result;
         }
 
@@ -149,7 +145,7 @@ namespace MapXML.Behaviors
                         }
                         else
                         {
-                            object ValueToLookup = beh.ObtainValueForLookup(this);
+                            object? ValueToLookup = beh.ObtainValueForLookup(this);
                             if (ValueToLookup != null && this.LookupTextContentFor(this.NodeName, beh.TypeToCreate, ValueToLookup, out string? AttributeValue)
                                 )
                                 return AttributeValue;
@@ -215,12 +211,12 @@ namespace MapXML.Behaviors
                         if (!ShouldGetThis(AttributeName)) continue;
                         if (beh.Policy == DeserializationPolicy.Create)
                         {
-                            string AttributeValue = beh.GetAttributeToSerialize(this, NodeName, AttributeName);
+                            string? AttributeValue = beh.GetAttributeToSerialize(this, NodeName, AttributeName);
                             if (AttributeValue != null) result.Add(AttributeName, AttributeValue);
                         }
                         else
                         {
-                            object ValueToLookup = beh.ObtainValueForLookup(this);
+                            object? ValueToLookup = beh.ObtainValueForLookup(this);
                             if (ValueToLookup != null && this.LookupAttributeFor(this.NodeName, AttributeName,
                                   beh.TypeToCreate, ValueToLookup, out string? AttributeValue)
                                 )
@@ -240,7 +236,7 @@ namespace MapXML.Behaviors
                 List<XMLMemberBehavior> _behaviors = new List<XMLMemberBehavior>();
                 List<XMLFunction> _functions = new List<XMLFunction>();
 
-                ICollection<(MemberInfo member, AbstractXMLMemberAttribute? attr)> members = new Collection<(MemberInfo, AbstractXMLMemberAttribute?)>();
+                Collection<(MemberInfo member, AbstractXMLMemberAttribute? attr)> members = new();
                 int order = 0;
                 foreach (var m in t.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
                 {
@@ -317,7 +313,7 @@ namespace MapXML.Behaviors
 
                 IntermediateMethod = (from mt in targetType.GetMethods(BindingFlags.Public | BindingFlags.Static)
                                       where
-                                      mt.Name.Equals(nameof(int.Parse))
+                                      mt.Name.Equals(nameof(int.Parse), StringComparison.Ordinal)
                                       && targetType.IsAssignableFrom(mt.ReturnType)
                                       && mt.GetParameters().Length == 2
                                       && mt.GetParameters()[0].ParameterType.Equals(typeof(String))
@@ -336,7 +332,7 @@ namespace MapXML.Behaviors
             {
                 IntermediateMethod = (from mt in targetType.GetMethods(BindingFlags.Public | BindingFlags.Static)
                                       where
-                                      mt.Name.Equals(nameof(int.Parse))
+                                      mt.Name.Equals(nameof(int.Parse), StringComparison.Ordinal)
                                       && targetType.IsAssignableFrom(mt.ReturnType)
                                       && mt.GetParameters().Length == 1
                                       && mt.GetParameters()[0].ParameterType.Equals(typeof(String))
@@ -421,7 +417,7 @@ namespace MapXML.Behaviors
             else
                 IntermediateMethod = (from mt in targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                                       where
-                                      mt.Name.Equals(nameof(int.ToString))
+                                      mt.Name.Equals(nameof(int.ToString), StringComparison.Ordinal)
                                       && typeof(String).IsAssignableFrom(mt.ReturnType)
                                       && mt.GetParameters().Length == 1
                                       && mt.GetParameters()[0].ParameterType.Equals(typeof(IFormatProvider))
@@ -875,7 +871,7 @@ namespace MapXML.Behaviors
             if ((GetHandler()?.HasConversionToString(FromType, out ConvertToString? converter) ?? false)
                 || __reverseConversions.TryGetValue(FromType, out converter))
             {
-                result = converter(value, Format);
+                result = converter(value, Culture);
                 return true;
             }
 

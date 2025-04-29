@@ -22,7 +22,7 @@ namespace MapXML
         IDeserializationOptionsBuilder IgnoreRootNode(bool b);
         IDeserializationOptions Build();
     }
-    public class XMLDeserializer : XMLSerializerBase
+    public class XMLDeserializer : XMLSerializerBase, IDisposable
     {
         /// <summary>
         /// An instance of the default options for the deserializer, with the exception of the <see cref="IDeserializationOptions.IgnoreRootNode"/> value which is set to true
@@ -30,9 +30,11 @@ namespace MapXML
         public static IDeserializationOptions DefaultOptions_IgnoreRootNode { get; } = OptionsBuilder().IgnoreRootNode(true).Build();
 
         public static IDeserializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
-        private class DefaultOptions : AbstractOptionsBuilder<IDeserializationOptionsBuilder>, IDeserializationOptions, IDeserializationOptionsBuilder
+        private sealed class DefaultOptions : AbstractOptionsBuilder<IDeserializationOptionsBuilder>, IDeserializationOptions, IDeserializationOptionsBuilder
         {
+#pragma warning disable CA1805 // It should be extra clear what the default value is
             public bool IgnoreRootNode { get; private set; } = false;
+#pragma warning restore CA1805
 
 
             IDeserializationOptions IDeserializationOptionsBuilder.Build() => this;
@@ -165,7 +167,7 @@ namespace MapXML
                             ConstructorInfo c = targetType.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
                             if (c != null)
                             {
-                                currentObject = c.Invoke(new object[0]);
+                                currentObject = c.Invoke(Array.Empty<object>());
                             }
                             else
                                 currentObject = FormatterServices.GetUninitializedObject(targetType);
@@ -230,8 +232,8 @@ namespace MapXML
             }
 
 
-            if (attributes.TryGetValue(FORMAT_PROVIDER_ATTRIBUTE, out var formatName))
-                ContextStack.Format = CultureInfo.GetCultureInfo(formatName);
+            if (attributes.TryGetValue(FormatProviderAttributeName, out var formatName))
+                ContextStack.Culture = CultureInfo.GetCultureInfo(formatName);
         }
 
 
@@ -277,9 +279,16 @@ namespace MapXML
         {
             _reader.Read();
         }
+
+        public void Dispose()
+        {
+            _reader?.Dispose();
+            _source?.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 
-    internal class PlaceHolderForLateLookup
+    internal sealed class PlaceHolderForLateLookup
     {
         public XMLSerializationException? PreviousException;
 

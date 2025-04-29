@@ -33,17 +33,6 @@ namespace MapXML.Utils
         }
 
         /// <summary>
-        /// Initializes a new instance of the StringWriter_WithEncoding class with the specified StringBuilder and encoding.
-        /// </summary>
-        /// <param name="sb">The StringBuilder to write to.</param>
-        /// <param name="encoding">The encoding to use.</param>
-        public StringWriter_WithEncoding(StringBuilder sb, Encoding encoding)
-            : base(sb)
-        {
-            _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
-        }
-
-        /// <summary>
         /// Initializes a new instance of the StringWriter_WithEncoding class with the specified StringBuilder, format provider, and encoding.
         /// </summary>
         /// <param name="sb">The StringBuilder to write to.</param>

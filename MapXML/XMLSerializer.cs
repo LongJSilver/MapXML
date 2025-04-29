@@ -10,7 +10,7 @@ using System.Xml;
 
 namespace MapXML
 {
-    internal class PrimitiveDictionaryEntry
+    internal sealed class PrimitiveDictionaryEntry
     {
         public readonly string KeyName;
         public readonly string Key;
@@ -103,12 +103,14 @@ namespace MapXML
     {
         public static ISerializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
 
-        private class DefaultOptions : AbstractOptionsBuilder<ISerializationOptionsBuilder>, ISerializationOptionsBuilder, ISerializationOptions
+        private sealed class DefaultOptions : AbstractOptionsBuilder<ISerializationOptionsBuilder>, ISerializationOptionsBuilder, ISerializationOptions
         {
+#pragma warning disable CA1805 // Let the default values be explicit
             public bool PreferTextNodesForLookups { get; private set; } = false;
             public AttributeOmissionPolicy AttributeOmissionPolicy { get; private set; } = AttributeOmissionPolicy.AsDictatedByCodeAnnotations;
-            public string? AdditionalRootNode { get; private set; } = null;
+            public string? AdditionalRootNode { get; private set;}
             public Encoding Encoding { get; private set; } = Encoding.UTF8;
+#pragma warning restore CS1805 
 
             public ISerializationOptions Build() => this;
 
@@ -181,9 +183,9 @@ namespace MapXML
 
         internal void CheckForFormatAttribute(IDictionary<String, String> attributes)
         {
-            if (attributes.TryGetValue(FORMAT_PROVIDER_ATTRIBUTE, out string formatName))
+            if (attributes.TryGetValue(FormatProviderAttributeName, out string formatName))
             {
-                ContextStack.Format = CultureInfo.GetCultureInfo(formatName);
+                ContextStack.Culture = CultureInfo.GetCultureInfo(formatName);
             }
         }
         public override void Run()
@@ -207,12 +209,12 @@ namespace MapXML
                 {
                     Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, this.Options, Options.AdditionalRootNode, null, true));
 
-                    ContextStack!.Format = cult;
+                    ContextStack!.Culture = cult;
 
                     if (Options.AdditionalRootNode != null)
                     {
                         xmlWriter.WriteStartElement(Options.AdditionalRootNode);
-                        xmlWriter.WriteAttributeString(FORMAT_PROVIDER_ATTRIBUTE, ContextStack.Format.Name);
+                        xmlWriter.WriteAttributeString(FormatProviderAttributeName, ContextStack.Culture.Name);
                         Push(Options.AdditionalRootNode);
                     }
 
@@ -254,9 +256,9 @@ namespace MapXML
             Dictionary<string, string> attributes = ContextStack.GetAttributesToSerialize();
             xmlWriter.WriteStartElement(this.ContextStack.NodeName);
 
-            if (ContextStack.Format != null)
+            if (ContextStack.Culture != null)
             {
-                attributes.Add(FORMAT_PROVIDER_ATTRIBUTE, ContextStack.Format.Name);
+                attributes.Add(FormatProviderAttributeName, ContextStack.Culture.Name);
             }
 
             foreach (var attribute in attributes)
@@ -314,13 +316,13 @@ namespace MapXML
             }
         }
 
-        private void WriteLookupTextContentChild(XmlWriter xmlWriter, string nodeName, string TextContent)
+        private static void WriteLookupTextContentChild(XmlWriter xmlWriter, string nodeName, string TextContent)
         {
             xmlWriter.WriteStartElement(nodeName);
             xmlWriter.WriteString(TextContent);
             xmlWriter.WriteEndElement();
         }
-        private void WriteLookupChild(XmlWriter xmlWriter, string nodeName, IReadOnlyDictionary<string, string> attributes)
+        private static void WriteLookupChild(XmlWriter xmlWriter, string nodeName, IReadOnlyDictionary<string, string> attributes)
         {
             xmlWriter.WriteStartElement(nodeName);
 

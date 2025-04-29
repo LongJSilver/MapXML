@@ -8,7 +8,8 @@ namespace MapXML.Utils
 {
     public static class Extensions
     {
-        internal static object GetCurrentInstance(this IXMLInternalContext context) => context.CurrentInstance ?? throw new ArgumentNullException("Current instance should not be null here!");
+        internal static object GetCurrentInstance(this IXMLInternalContext context) => context.CurrentInstance
+                    ?? throw new InvalidOperationException("Current instance should not be null here!");
         public static IEnumerable<ResultType> ForEach<EnumerableType, ResultType>(
             this IEnumerable<EnumerableType> list,
             Func<EnumerableType, ResultType> function)
