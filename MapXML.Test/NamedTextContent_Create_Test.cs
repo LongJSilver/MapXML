@@ -11,7 +11,7 @@ namespace MapXML.Tests
         {
             BaseTestHandler handl = new _handl();
             handl.RegisterTypeConverter(typeof(Guid),
-                (object guid, IFormatProvider ifp) =>
+                (object guid, IFormatProvider? ifp) =>
             {
                 return ((Guid)guid).ToString("B", ifp).ToUpper();
             });
@@ -47,11 +47,8 @@ namespace MapXML.Tests
             Assert.AreEqual("Forest", classInfo.Habitat);
 
 
-            var opt = XMLSerializer.OptionsBuilder().WithAdditionalRootNode("xml").Build();
-            XMLSerializer ser = new XMLSerializer(handl, opt);
-            handl.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
-            ser.Run();
-
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<AnimalClasses>(handl, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
         private class _handl : BaseTestHandler
@@ -90,7 +87,7 @@ namespace MapXML.Tests
             }
         }
 
-        private class AnimalClasses
+        private class AnimalClasses : IEquatable<AnimalClasses?>
         {
             [XMLChild("AnimalClass")]
             public List<AnimalClass> Classes { get; set; }
@@ -100,9 +97,20 @@ namespace MapXML.Tests
             {
                 Classes = new List<AnimalClass>();
             }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as AnimalClasses);
+            }
+
+            public bool Equals(AnimalClasses? other)
+            {
+                return other is not null &&
+                       BaseTestClass.Compare(this.Classes, other.Classes);
+            }
         }
 
-        public class AnimalClass
+        public class AnimalClass : IEquatable<AnimalClass?>
         {
             [XMLAttribute]
             public string Type { get; set; }
@@ -113,40 +121,40 @@ namespace MapXML.Tests
             [XMLChild]
             public ClassInfo ClassInfo { get; set; }
 
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as AnimalClass);
+            }
 
-            /*
-            <AnimalClass Type="Mammal">
-              <AnimalInfo>
-                <Habitat>Forest</Habitat>
-              </AnimalInfo>
-              <AnimalDetails>
-                <UniqueID>{A1B2C3D4-E5F6-7890-GH12-IJKL34567890}</UniqueID>
-                <NameTemplate>{AnimalName}</NameTemplate>
-                <RelationDetails>
-                  <Relation1>
-                    <ParentID>{12345678-90AB-CDEF-1234-567890ABCDEF}</ParentID>
-                    <RelationType>Parent</RelationType>
-                  </Relation1>
-                </RelationDetails>
-              </AnimalDetails>
-              <ClassInfo>
-                <Class>
-                  <ClassID>{09876543-21FE-DCBA-0987-654321FEDCBA}</ClassID>
-                  <Habitat>Forest</Habitat>
-                </Class>
-              </ClassInfo>
-            </AnimalClass> 
-
-             */
+            public bool Equals(AnimalClass? other)
+            {
+                return other is not null &&
+                       this.Type == other.Type &&
+                       EqualityComparer<AnimalInfo>.Default.Equals(this.AnimalInfo, other.AnimalInfo) &&
+                       EqualityComparer<AnimalDetails>.Default.Equals(this.AnimalDetails, other.AnimalDetails) &&
+                       EqualityComparer<ClassInfo>.Default.Equals(this.ClassInfo, other.ClassInfo);
+            }
         }
 
-        public class AnimalInfo
+        public class AnimalInfo : IEquatable<AnimalInfo?>
         {
+
             [XMLChild]
             public string Habitat { get; set; }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as AnimalInfo);
+            }
+
+            public bool Equals(AnimalInfo? other)
+            {
+                return other is not null &&
+                       this.Habitat == other.Habitat;
+            }
         }
 
-        public class AnimalDetails
+        public class AnimalDetails : IEquatable<AnimalDetails?>
         {
             [XMLChild]
             public Guid UniqueID { get; set; }
@@ -154,43 +162,104 @@ namespace MapXML.Tests
             public string NameTemplate { get; set; }
             [XMLChild]
             public RelationDetails RelationDetails { get; set; }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as AnimalDetails);
+            }
+
+            public bool Equals(AnimalDetails? other)
+            {
+                return other is not null &&
+                       this.UniqueID.Equals(other.UniqueID) &&
+                       this.NameTemplate == other.NameTemplate &&
+                       EqualityComparer<RelationDetails>.Default.Equals(this.RelationDetails, other.RelationDetails);
+            }
         }
 
-        public class RelationDetails
+        public class RelationDetails : IEquatable<RelationDetails?>
         {
-            [XMLChild]
+            [XMLChild("Relation")]
             public List<Relation> Relations { get; set; }
             public RelationDetails()
             {
                 Relations = new List<Relation>();
             }
 
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as RelationDetails);
+            }
+
+            public bool Equals(RelationDetails? other)
+            {
+                return other is not null &&
+                       BaseTestClass.Compare(this.Relations, other.Relations);
+            }
         }
 
-        public class Relation
+        public class Relation : IEquatable<Relation?>
         {
             [XMLChild]
             public Guid ParentID { get; set; }
             [XMLChild]
             public string RelationType { get; set; }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as Relation);
+            }
+
+            public bool Equals(Relation? other)
+            {
+                return other is not null &&
+                       this.ParentID.Equals(other.ParentID) &&
+                       this.RelationType == other.RelationType;
+            }
+
         }
 
-        public class ClassInfo
+        public class ClassInfo : IEquatable<ClassInfo?>
         {
+
             [XMLChild("Class")]
             public List<Class> Classes { get; set; }
             public ClassInfo()
             {
                 Classes = new List<Class>();
             }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as ClassInfo);
+            }
+
+            public bool Equals(ClassInfo? other)
+            {
+                return other is not null &&
+                       BaseTestClass.Compare(this.Classes, other.Classes);
+            }
+
         }
 
-        public class Class
+        public class Class : IEquatable<Class?>
         {
             [XMLChild]
             public Guid ClassID { get; set; }
             [XMLChild]
             public string Habitat { get; set; }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as Class);
+            }
+
+            public bool Equals(Class? other)
+            {
+                return other is not null &&
+                       this.ClassID.Equals(other.ClassID) &&
+                       this.Habitat == other.Habitat;
+            }
         }
 
     }

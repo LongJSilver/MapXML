@@ -17,6 +17,9 @@ namespace MapXML.Tests
             TestClass svc = handler.GetResults<TestClass>()[0];
             Assert.AreEqual(1, svc.Integer);
             Assert.AreEqual(TestClass.Values.Two, svc.EnumVariable);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<TestClass>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
         [TestMethod]
@@ -33,9 +36,12 @@ namespace MapXML.Tests
 
             Assert.AreEqual(12.0, Results.First(t => t.Name.Equals("Item21")).Number);
             Assert.AreNotEqual(12.0, Results.First(t => t.Name.Equals("Item22")).Number);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<TestClass>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
-        private class TestClass
+        private class TestClass : IEquatable<TestClass?>
         {
             internal enum Values
             {
@@ -52,19 +58,22 @@ namespace MapXML.Tests
 
             [XMLAttribute("EnumValue")]
             internal Values EnumVariable;
-        }
-        private class EncoderClass
-        {
-            [XMLAttribute("Number")]
-            public int Integer;
-            [XMLAttribute("Decimal1")]
-            public float Float;
-            [XMLAttribute("Decimal2")]
-            public double Double;
-            [XMLAttribute("String")]
-            public string Name;
-        }
 
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as TestClass);
+            }
+
+            public bool Equals(TestClass? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Name == other.Name &&
+                       this.Number == other.Number &&
+                       this.EnumVariable == other.EnumVariable;
+            }
+        }
+       
     }
 
 }

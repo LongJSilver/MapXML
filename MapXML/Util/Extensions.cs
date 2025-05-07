@@ -41,7 +41,7 @@ namespace MapXML.Utils
         }
         public static bool IsFieldOrProperty(this MemberInfo member) => member is FieldInfo || member is PropertyInfo;
 
-        public static object GetValue(this MemberInfo member, object instance)
+        public static object? GetValue(this MemberInfo member, object instance)
         {
             if (member is FieldInfo field) return field.GetValue(instance);
             else if (member is PropertyInfo pinfo) return pinfo.GetValue(instance);

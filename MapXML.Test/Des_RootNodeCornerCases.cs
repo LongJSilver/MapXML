@@ -122,22 +122,37 @@ namespace MapXML.Tests
             Assert.AreEqual("The Two Towers", movies[i].Prequel?.Title);
             i++;
 
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<MovieCollection>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
     }
 
-    public class MovieCollection
+    public class MovieCollection : IEquatable<MovieCollection?>
     {
         [XMLChild("Movie")]
         public List<Movie> Movies { get; set; } = new List<Movie>();
+
+        public override bool Equals(object? obj)
+        {
+            return this.Equals(obj as MovieCollection);
+        }
+
+        public bool Equals(MovieCollection? other)
+        {
+            return other is not null &&
+                   BaseTestClass.Compare(this.Movies, other.Movies);
+        }
 
         [XMLFunction]
         public Movie? GetMovie([XMLParameter("Title")] string title)
         {
             return Movies.FirstOrDefault(m => m.Title == title);
         }
+
     }
 
-    public class Movie
+    public class Movie : IEquatable<Movie?>
     {
         public string Title { get; set; }
         public string Director { get; set; }
@@ -146,6 +161,21 @@ namespace MapXML.Tests
 
         [XMLChild("Prequel", DeserializationPolicy.Lookup)]
         public Movie Prequel { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return this.Equals(obj as Movie);
+        }
+
+        public bool Equals(Movie? other)
+        {
+            return other is not null &&
+                   this.Title == other.Title &&
+                   this.Director == other.Director &&
+                   this.ReleaseYear == other.ReleaseYear &&
+                   this.Genre == other.Genre &&
+                   EqualityComparer<Movie>.Default.Equals(this.Prequel, other.Prequel);
+        }
     }
 
 

@@ -1,5 +1,6 @@
 ﻿using MapXML.Attributes;
 using MapXML.Utils;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 namespace MapXML.Tests
 {
     [TestClass()]
@@ -8,19 +9,19 @@ namespace MapXML.Tests
         [TestMethod]
         public void LookupValues()
         {
-            BaseTestHandler handl = new BaseTestHandler();
-            handl.RegisterTypeConverter(typeof(Guid),
+            BaseTestHandler handler = new BaseTestHandler();
+            handler.RegisterTypeConverter(typeof(Guid),
                 (object guid, IFormatProvider ifp) =>
             {
                 return ((Guid)guid).ToString("B", ifp).ToUpper();
             });
 
-            handl.Associate("AnimalClasses", typeof(AnimalClasses), DeserializationPolicy.Create);
-            XMLDeserializer xdes = new XMLDeserializer(GetTestXML("NamedTextContent_Lookup"), handl, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+            handler.Associate("AnimalClasses", typeof(AnimalClasses), DeserializationPolicy.Create);
+            XMLDeserializer xdes = new XMLDeserializer(GetTestXML("NamedTextContent_Lookup"), handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
             //*********************//
-            var results = handl.GetResults<AnimalClasses>().FirstOrDefault();
+            var results = handler.GetResults<AnimalClasses>().FirstOrDefault();
             Assert.IsNotNull(results);
             Assert.AreEqual(2, results.Habitats.Count);
             Assert.AreEqual(2, results.Animals.Count);
@@ -42,13 +43,15 @@ namespace MapXML.Tests
 
 
             var opt = XMLSerializer.OptionsBuilder().WithAdditionalRootNode("xml").Build();
-            XMLSerializer ser = new XMLSerializer(handl, opt);
-            handl.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
+            XMLSerializer ser = new XMLSerializer(handler, opt);
+            handler.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
             ser.Run();
 
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<AnimalClasses>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
-        private class AnimalClasses
+        private class AnimalClasses : IEquatable<AnimalClasses?>
         {
             [XMLChild("AnimalInfo", SerializationOrder = 2)]
             public List<AnimalInfo> Animals { get; set; }
@@ -57,8 +60,20 @@ namespace MapXML.Tests
             public Dictionary<Guid, Habitat> Habitats { get; set; }
 
             [XMLFunction()]
-            internal Habitat FindHabitat(Guid id)
+            internal Habitat FindHabitat([XMLParameter(nameof(Habitat.ID))] Guid id)
             => Habitats[id];
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as AnimalClasses);
+            }
+
+            public bool Equals(AnimalClasses? other)
+            {
+                return other is not null &&
+                       BaseTestClass.Compare(this.Animals, other.Animals) &&
+                       BaseTestClass.Compare(this.Habitats, other.Habitats);
+            }
 
             public AnimalClasses()
             {
@@ -67,21 +82,46 @@ namespace MapXML.Tests
             }
         }
 
-        public class AnimalInfo
+        public class AnimalInfo : IEquatable<AnimalInfo?>
         {
             [XMLChild("Habitat", DeserializationPolicy.Lookup)]
             public Habitat Habitat { get; set; }
 
             [XMLAttribute]
             public string Name { get; set; }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as AnimalInfo);
+            }
+
+            public bool Equals(AnimalInfo? other)
+            {
+                return other is not null &&
+                       EqualityComparer<Habitat>.Default.Equals(this.Habitat, other.Habitat) &&
+                       this.Name == other.Name;
+            }
         }
 
-        public class Habitat
+        public class Habitat : IEquatable<Habitat?>
         {
+
             [XMLAttribute]
             public string Name { get; set; }
             [XMLAttribute]
             public Guid ID { get; set; }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as Habitat);
+            }
+
+            public bool Equals(Habitat? other)
+            {
+                return other is not null &&
+                       this.Name == other.Name &&
+                       this.ID.Equals(other.ID);
+            }
         }
     }
 }

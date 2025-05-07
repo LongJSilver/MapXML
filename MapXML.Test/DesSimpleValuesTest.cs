@@ -18,7 +18,11 @@ namespace MapXML.Tests
             BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MixedContent>("MixedContent");
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null);
-            Assert.ThrowsException<XMLMixedContentException>(xdes.Run);
+
+            XMLSerializationException thrown = Assert.ThrowsException<XMLSerializationException>(xdes.Run);
+            // Assert that the inner exception is of the expected type
+            Assert.IsNotNull(thrown.InnerException, "Inner exception is null.");
+            Assert.IsInstanceOfType(thrown.InnerException, typeof(XMLMixedContentException), "Inner exception is not of the expected type.");
 
         }
         internal class MixedContent
@@ -53,6 +57,8 @@ namespace MapXML.Tests
             Assert.AreEqual(13.0, svc.Double);
             Assert.AreEqual(DateTime.Parse("2023-10-05"), svc.Date);
 
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<SimpleValueClass>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
         [TestMethod]
         public void SimplePropValues()
@@ -69,12 +75,15 @@ namespace MapXML.Tests
             Assert.AreEqual(12.0, svc.Float);
             Assert.AreEqual(13.0, svc.Double);
             Assert.AreEqual(DateTime.Parse("2023-10-05"), svc.Date);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<SimpleValuePropsClass>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
         static DesSimpleValuesTest()
         {
         }
-        private class SimpleValueClass
+        private class SimpleValueClass : IEquatable<SimpleValueClass?>
         {
             [XMLAttribute("Number")]
             public int Integer;
@@ -87,8 +96,23 @@ namespace MapXML.Tests
 
             [XMLTextContent]
             public DateTime Date;
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as SimpleValueClass);
+            }
+
+            public bool Equals(SimpleValueClass? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Float == other.Float &&
+                       this.Double == other.Double &&
+                       this.Name == other.Name &&
+                       this.Date == other.Date;
+            }
         }
-        private class SimpleValuePropsClass
+        private class SimpleValuePropsClass : IEquatable<SimpleValuePropsClass?>
         {
             [XMLAttribute("Number")]
             public int Integer { get; set; }
@@ -99,10 +123,23 @@ namespace MapXML.Tests
             [XMLAttribute("String")]
             public string Name { get; set; }
 
-
             [XMLTextContent]
             public DateTime Date { get; set; }
 
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as SimpleValuePropsClass);
+            }
+
+            public bool Equals(SimpleValuePropsClass? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Float == other.Float &&
+                       this.Double == other.Double &&
+                       this.Name == other.Name &&
+                       this.Date == other.Date;
+            }
         }
 
     }

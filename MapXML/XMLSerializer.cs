@@ -4,6 +4,7 @@ using MapXML.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -167,6 +168,8 @@ namespace MapXML
 
         IXMLSerializationHandler? _handler;
         private readonly StringBuilder _sb = new StringBuilder();
+        public Stream ResultStream => new MemoryStream(this.Options.Encoding.GetBytes(_sb.ToString()), false);
+
         public String Result => _sb.ToString();
 
 

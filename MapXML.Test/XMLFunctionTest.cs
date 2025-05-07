@@ -1,5 +1,6 @@
 ﻿using MapXML.Attributes;
 using MapXML.Utils;
+using System.Linq;
 
 namespace MapXML.Tests
 {
@@ -23,25 +24,9 @@ namespace MapXML.Tests
             Assert.AreEqual(2, Cls1.Props.Count);
             Assert.IsNotNull(Cls1.Props.FirstOrDefault(p => p.ID == 2));
             Assert.IsNotNull(Cls1.Props.FirstOrDefault(p => p.ID == 3));
-        }
-        [TestMethod]
-        public void SerializeSimpleLookup()
-        {
-            Stream s = GetTestXML("XMLFunctions");
-            TestBaseHandler cont = new TestBaseHandler();
-            cont.Associate<Test_WithLookup>("Tests");
 
-
-            var opt = XMLDeserializer.OptionsBuilder().AllowImplicitFields(true).Build();
-            XMLDeserializer xdes = new XMLDeserializer(s, cont, opt);
-
-            xdes.Run();
-            //---------------------------//
-
-
-            XMLSerializer ser = new XMLSerializer(cont);
-            cont.GetResults<Test_WithLookup>().ForEach(c => ser.AddItem("Tests", c));
-            ser.Run();
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<Test_WithLookup>(handler, opt));
         }
 
         [TestMethod]
@@ -60,23 +45,9 @@ namespace MapXML.Tests
             Assert.AreEqual(2, cls1.Props.Count);
             Assert.IsNotNull(cls1.Props.FirstOrDefault(p => p.ID == 2));
             Assert.IsNotNull(cls1.Props.FirstOrDefault(p => p.ID == 3));
-        }
 
-        [TestMethod]
-        public void SerializeLookupFunction()
-        {
-            Stream s = GetTestXML("XMLFunctions");
-            TestBaseHandler handler = new TestBaseHandler();
-            handler.Associate<Test_WithLookup>("Tests");
-
-            var opt = XMLDeserializer.OptionsBuilder().AllowImplicitFields(true).Build();
-            XMLDeserializer xdes = new XMLDeserializer(s, handler, opt);
-            xdes.Run();
-            //---------------------------//
-            //---------------------------// 
-            XMLSerializer ser = new XMLSerializer(handler);
-            ser.AddItem("Tests", handler.GetResults<Test_WithLookup>().First());
-            ser.Run();
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<Test_WithLookup>(handler, opt));
         }
 
         private class TestBaseHandler : BaseTestHandler
@@ -114,7 +85,9 @@ namespace MapXML.Tests
 
         }
 
-        private class Test_WithLookup
+
+
+        private class Test_WithLookup : IEquatable<Test_WithLookup>
         {
             [XMLChild("Prop")]
             private List<Prop> _props = new List<Prop>();
@@ -131,26 +104,109 @@ namespace MapXML.Tests
                 _cls.Add(c);
             }
 
+            public override bool Equals(object? obj)
+            {
+                return obj is Test_WithLookup lookup && Equals(lookup);
+            }
+
+            public bool Equals(Test_WithLookup? other)
+            {
+
+                return
+                    other != null &&
+                BaseTestClass.Compare(this._cls, other._cls) &&
+                BaseTestClass.Compare(this._props, other._props);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(this._props, this._cls);
+            }
+
             [XMLFunction]
             public Prop? GetPropByID([XMLParameter("ID")] int id)
             {
                 return _props.FirstOrDefault(p => p.ID == id);
             }
+
+            public static bool operator ==(Test_WithLookup? left, Test_WithLookup? right)
+            {
+                return EqualityComparer<Test_WithLookup>.Default.Equals(left, right);
+            }
+
+            public static bool operator !=(Test_WithLookup? left, Test_WithLookup? right)
+            {
+                return !(left == right);
+            }
         }
 
-        private class Cls
+        private class Cls : IEquatable<Cls>
         {
             public string Name;
             public string Desc;
 
             [XMLChild("Prop", DeserializationPolicy.Lookup)]
             public List<Prop> Props = new List<Prop>();
+
+            public override bool Equals(object? obj)
+            {
+                return obj is Cls cls && Equals(cls);
+
+            }
+
+            public bool Equals(Cls? other)
+            {
+                return other != null && this.Name == other.Name &&
+                         this.Desc == other.Desc &&
+                        BaseTestClass.Compare(this.Props, other.Props);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(this.Name, this.Desc, this.Props);
+            }
+
+            public static bool operator ==(Cls? left, Cls? right)
+            {
+                return EqualityComparer<Cls>.Default.Equals(left, right);
+            }
+
+            public static bool operator !=(Cls? left, Cls? right)
+            {
+                return !(left == right);
+            }
         }
 
-        private class Prop
+        private class Prop : IEquatable<Prop>
         {
             public int ID;
-            public string Name;
+            public string? Name;
+
+            public override bool Equals(object? obj)
+            {
+                return obj is Prop prop && Equals(prop);
+            }
+
+            public bool Equals(Prop? other)
+            {
+                return other != null && this.ID == other.ID &&
+                         this.Name == other.Name;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(this.ID, this.Name);
+            }
+
+            public static bool operator ==(Prop? left, Prop? right)
+            {
+                return EqualityComparer<Prop>.Default.Equals(left, right);
+            }
+
+            public static bool operator !=(Prop? left, Prop? right)
+            {
+                return !(left == right);
+            }
         }
 
     }
