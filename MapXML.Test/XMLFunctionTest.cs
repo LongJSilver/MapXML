@@ -79,7 +79,7 @@ namespace MapXML.Tests
             ser.Run();
         }
 
-        private class TestBaseHandler : DefaultHandler
+        private class TestBaseHandler : BaseTestHandler
         {
             public override bool Lookup_FromAttributes(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, Type targetClass,
                 out object? result)

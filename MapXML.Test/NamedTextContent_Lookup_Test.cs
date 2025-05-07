@@ -8,7 +8,7 @@ namespace MapXML.Tests
         [TestMethod]
         public void LookupValues()
         {
-            DefaultHandler handl = new DefaultHandler();
+            BaseTestHandler handl = new BaseTestHandler();
             handl.RegisterTypeConverter(typeof(Guid),
                 (object guid, IFormatProvider ifp) =>
             {

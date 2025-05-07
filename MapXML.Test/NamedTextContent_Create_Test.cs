@@ -9,7 +9,7 @@ namespace MapXML.Tests
         [TestMethod]
         public void CreatedValues()
         {
-            DefaultHandler handl = new _handl();
+            BaseTestHandler handl = new _handl();
             handl.RegisterTypeConverter(typeof(Guid),
                 (object guid, IFormatProvider ifp) =>
             {
@@ -54,7 +54,7 @@ namespace MapXML.Tests
 
         }
 
-        private class _handl : DefaultHandler
+        private class _handl : BaseTestHandler
         {
             const string PATTERN = @"Relation\d+";
 

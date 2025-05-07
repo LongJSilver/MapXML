@@ -9,7 +9,7 @@ namespace MapXML.Tests
         public void EnumConversion()
         {
             Stream s = GetTestXML("EnumConversion");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<TestClass>("Enum");
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
@@ -23,7 +23,7 @@ namespace MapXML.Tests
         public void Charsets()
         {
             Stream s = GetTestXML("Charsets");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<TestClass>("Item");
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();

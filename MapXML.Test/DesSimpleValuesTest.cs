@@ -15,7 +15,7 @@ namespace MapXML.Tests
         public void FailOnMixedContent()
         {
             Stream s = GetTestXML("MixedContent");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MixedContent>("MixedContent");
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null);
             Assert.ThrowsException<XMLMixedContentException>(xdes.Run);
@@ -41,7 +41,7 @@ namespace MapXML.Tests
         public void SimpleValues()
         {
             Stream s = GetTestXML("SimpleValues");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate("SimpleValue", typeof(SimpleValueClass), DeserializationPolicy.Create);
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
@@ -58,7 +58,7 @@ namespace MapXML.Tests
         public void SimplePropValues()
         {
             Stream s = GetTestXML("SimpleValues");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate("SimpleValue", typeof(SimpleValuePropsClass), DeserializationPolicy.Create);
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();

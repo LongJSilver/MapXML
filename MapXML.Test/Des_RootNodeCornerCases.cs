@@ -15,7 +15,7 @@ namespace MapXML.Tests
         public void IgnoreRoot_WithOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = new MovieCollection();
@@ -34,7 +34,7 @@ namespace MapXML.Tests
         public void IgnoreRoot_WithoutOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases_ExtraRoot");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = null;// new MovieCollection();
@@ -54,7 +54,7 @@ namespace MapXML.Tests
         public void DontIgnoreRoot_WithOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = new MovieCollection();
@@ -73,7 +73,7 @@ namespace MapXML.Tests
         public void DontIgnoreRoot_WithoutOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = null;// new MovieCollection();
@@ -88,7 +88,7 @@ namespace MapXML.Tests
             TestResults(handler);
         }
 
-        private void TestResults(DefaultHandler handler)
+        private void TestResults(BaseTestHandler handler)
         {
             // Retrieve the deserialized results as a list of Movie objects
             Assert.AreEqual(1, handler.GetResults<MovieCollection>().Count, "The number of Movie Collections must be 1.");

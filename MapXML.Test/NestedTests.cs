@@ -11,7 +11,7 @@ namespace MapXML.Tests
         public void OneNestedNode()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<OneNestedChild>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner:null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -28,7 +28,7 @@ namespace MapXML.Tests
         public void NestedArray()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenArray>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -51,7 +51,7 @@ namespace MapXML.Tests
         public void SerializeNestedArray()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenArray>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -69,7 +69,7 @@ namespace MapXML.Tests
         public void NestedCollection()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenCollection>("SimpleValue");
 
       
@@ -92,7 +92,7 @@ namespace MapXML.Tests
         public void NestedDictionary()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -113,7 +113,7 @@ namespace MapXML.Tests
         public void SerializeNestedDictionary()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
          
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);

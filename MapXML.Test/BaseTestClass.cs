@@ -15,4 +15,8 @@ namespace MapXML.Tests
         {
         }
     }
+
+    public class BaseTestHandler : DefaultHandler {
+
+    }
 }
