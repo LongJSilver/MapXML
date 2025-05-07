@@ -8,29 +8,63 @@ namespace MapXML
 {
     public class DefaultHandler : IXMLSerializationHandler
     {
-        private readonly Dictionary<String, (Type targetType, DeserializationPolicy policy)> _quickAssociations =
-            new Dictionary<string, (Type targetType, DeserializationPolicy policy)>();
+        protected Dictionary<String, (Type targetType, DeserializationPolicy policy)> QuickAssociations { get; private set; }
+            = new Dictionary<string, (Type targetType, DeserializationPolicy policy)>();
+
+        private readonly Dictionary<Type, Func<object>> _creators = new Dictionary<Type, Func<object>>();
 
         private readonly Dictionary<Type, ConvertToString> _Converters_ToString = new Dictionary<Type, ConvertToString>();
         private readonly Dictionary<Type, ConvertFromString> _Converters_FromString = new Dictionary<Type, ConvertFromString>();
 
-        private List<object> _allResults = new List<object>();
+        // Results //
+        protected List<(int level, object result)> AllResults { get; private set; }
+            = new List<(int level, object result)>();
+        protected ListIndexer<String, (int level, object result)> ResultsByNode { get; private set; }
+            = new ListIndexer<string, (int level, object result)>();
+        protected Dictionary<String, (Type targetType, DeserializationPolicy policy)> Associations => QuickAssociations;
 
-        private ListIndexer<String, object> _resultsByNode =
-            new ListIndexer<string, object>();
-        public int ResultCount => _allResults.Count;
+        public int ResultCount => AllResults.Count;
+        public IReadOnlyList<object> Results => AllResults.Select(r => r.result).ToList();
+        public IReadOnlyList<object> TopLevelResults => AllResults.Where(r => r.level == 1).Select(r => r.result).ToList();
 
-        public IReadOnlyList<object> Results => _allResults;
+
+        /// <summary>
+        /// A new List is created at each call. Consider caching the results.
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <returns></returns>
+        public IReadOnlyList<V> GetResults<V>(int level = -1)
+            => Filter<V>(AllResults, level);
+
+        /// <summary>
+        /// A new List is created at each call. Consider caching the results.
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <returns></returns>
+        public IEnumerable<V> GetResults<V>(string nodeName, int level = -1)
+            => Filter<V>(ResultsByNode[nodeName], level);
+
+        private static List<V> Filter<V>(IEnumerable<(int level, object result)> items, int level)
+        {
+            return items.Where(item =>
+                                     typeof(V).IsAssignableFrom(item.result.GetType())
+                                    && (level == -1 || item.level == level)
+                              )
+                .Select(item => (V)item.result)
+                .ToList();
+        }
+
+
+        // Results //
 
         public void Associate(String nodeName, Type targetType, DeserializationPolicy policy = DeserializationPolicy.Create)
         {
-            _quickAssociations[nodeName] = (targetType, policy);
+            QuickAssociations[nodeName] = (targetType, policy);
         }
 
         public void Associate<V>(String nodeName, DeserializationPolicy policy = DeserializationPolicy.Create)
-        {
-            Associate(nodeName, typeof(V), policy);
-        }
+                 => Associate(nodeName, typeof(V), policy);
+
 
         public void RegisterTypeConverter(Type targetType, ConvertToString converterDelegate)
         {
@@ -42,28 +76,14 @@ namespace MapXML
             _Converters_FromString[targetType ?? throw new ArgumentNullException(nameof(targetType))]
                 = converterDelegate ?? throw new ArgumentNullException(nameof(converterDelegate));
         }
-        /// <summary>
-        /// A new List is created at each call. Consider caching the results.
-        /// </summary>
-        /// <typeparam name="V"></typeparam>
-        /// <returns></returns>
-        public IReadOnlyList<V> GetResults<V>()
-            => _allResults.Where(item => typeof(V).IsAssignableFrom(item.GetType())).OfType<V>().ToList();
 
-        /// <summary>
-        /// A new List is created at each call. Consider caching the results.
-        /// </summary>
-        /// <typeparam name="V"></typeparam>
-        /// <returns></returns>
-        public IEnumerable<V> GetResults<V>(string nodeName)
-            => _resultsByNode[nodeName].OfType<V>().ToList();
 
         public virtual void Finalized(IXMLState state, string nodeName, object result)
         {
-            if (_quickAssociations.ContainsKey(nodeName))
+            if (QuickAssociations.ContainsKey(nodeName))
             {
-                _allResults.Add(result);
-                _resultsByNode.Add(nodeName, result);
+                AllResults.Add((state.Level, result));
+                ResultsByNode.Add(nodeName, (state.Level, result));
             }
         }
 
@@ -77,7 +97,7 @@ namespace MapXML
         public virtual bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
            [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result)
         {
-            if (_quickAssociations.TryGetValue(nodeName, out var data))
+            if (QuickAssociations.TryGetValue(nodeName, out var data))
             {
                 policy = data.policy;
                 result = data.targetType;
@@ -126,7 +146,6 @@ namespace MapXML
             _creators[typeof(V)] = creator;
         }
 
-        private Dictionary<Type, Func<object>> _creators = new Dictionary<Type, Func<object>>();
 
         public virtual bool OverrideCreation(IXMLState state, Type t, [MaybeNullWhen(false)][NotNullWhen(true)] out object result)
         {

@@ -74,9 +74,6 @@ namespace MapXML
                 Culture = null;
                 return (T)(object)this;
             }
-
-
-
         }
 
         public const string FormatProviderAttributeName = "xml.format";
@@ -121,7 +118,10 @@ namespace MapXML
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
             _path = new Stack<PathElement>();
-            _path.Push(new PathElement("", -1, 0, "/"));
+            int baseLevel = -1;
+            if (options is IDeserializationOptions dso && !dso.IgnoreRootNode)
+                baseLevel++;
+            _path.Push(new PathElement("", baseLevel, 0, "/"));
         }
 
         internal void Push(XMLNodeBehaviorProfile c)
