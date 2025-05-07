@@ -29,9 +29,22 @@ namespace MapXML
         /// </summary>
         public static IDeserializationOptions DefaultOptions_IgnoreRootNode { get; } = OptionsBuilder().IgnoreRootNode(true).Build();
 
-        public static IDeserializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
+        public static IDeserializationOptionsBuilder OptionsBuilder(IXMLOptions? copyFrom = null) => new DefaultOptions(copyFrom);
         private sealed class DefaultOptions : AbstractOptionsBuilder<IDeserializationOptionsBuilder>, IDeserializationOptions, IDeserializationOptionsBuilder
         {
+            public DefaultOptions(IXMLOptions? CopyFrom = null) : base(CopyFrom)
+            {
+                if(CopyFrom is IDeserializationOptions so)
+                {
+                    this.IgnoreRootNode= so.IgnoreRootNode;
+                }
+            }
+
+            /// <summary>
+            /// Whether to skip the root node of the XML document.
+            /// <para/> DEFAULT: false
+            /// </summary>
+
 #pragma warning disable CA1805 // It should be extra clear what the default value is
             public bool IgnoreRootNode { get; private set; } = false;
 #pragma warning restore CA1805

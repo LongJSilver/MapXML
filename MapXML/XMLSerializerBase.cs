@@ -49,6 +49,15 @@ namespace MapXML
 
         protected abstract class AbstractOptionsBuilder<T> : IXMLOptionsBuilder<T>, IXMLOptions where T : IXMLOptionsBuilder<T>
         {
+            protected AbstractOptionsBuilder(IXMLOptions? CopyFrom = null)
+            {
+                if (CopyFrom != null)
+                {
+                    AllowImplicitFields = CopyFrom.AllowImplicitFields;
+                    Culture = CopyFrom.Culture;
+                }
+            }
+
             public CultureInfo? Culture { get; private set; }
             public bool AllowImplicitFields { get; private set; }
             T IXMLOptionsBuilder<T>.AllowImplicitFields(bool b)

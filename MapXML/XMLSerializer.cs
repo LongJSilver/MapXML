@@ -24,6 +24,7 @@ namespace MapXML
             this.ValueName = valueName;
             this.Value = value;
         }
+
     }
 
     public enum AttributeOmissionPolicy : byte
@@ -66,6 +67,7 @@ namespace MapXML
         /// <para/>DEFAULT: UTF8
         /// </summary>
         Encoding Encoding { get; }
+
     }
 
     public interface ISerializationOptionsBuilder : IXMLOptionsBuilder<ISerializationOptionsBuilder>
@@ -101,14 +103,25 @@ namespace MapXML
 
     public class XMLSerializer : XMLSerializerBase
     {
-        public static ISerializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
+        public static ISerializationOptionsBuilder OptionsBuilder(IXMLOptions? copyFrom = null) => new DefaultOptions(copyFrom);
 
         private sealed class DefaultOptions : AbstractOptionsBuilder<ISerializationOptionsBuilder>, ISerializationOptionsBuilder, ISerializationOptions
         {
+            public DefaultOptions(IXMLOptions? CopyFrom = null) : base(CopyFrom)
+            {
+                if(CopyFrom is ISerializationOptions so)
+                {
+                    this.Encoding= so.Encoding;
+                    this.AttributeOmissionPolicy = so.AttributeOmissionPolicy;
+                    this.AdditionalRootNode = so.AdditionalRootNode;
+                    this.PreferTextNodesForLookups = so.PreferTextNodesForLookups;
+                }
+            }
+
 #pragma warning disable CA1805 // Let the default values be explicit
             public bool PreferTextNodesForLookups { get; private set; } = false;
             public AttributeOmissionPolicy AttributeOmissionPolicy { get; private set; } = AttributeOmissionPolicy.AsDictatedByCodeAnnotations;
-            public string? AdditionalRootNode { get; private set;}
+            public string? AdditionalRootNode { get; private set; }
             public Encoding Encoding { get; private set; } = Encoding.UTF8;
 #pragma warning restore CS1805 
 
