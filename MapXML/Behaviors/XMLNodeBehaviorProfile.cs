@@ -199,10 +199,9 @@ namespace MapXML.Behaviors
             }
             else
             {
-
                 if (_staticClassData != null)
                 {
-                    foreach (var beh in _staticClassData._attributeBehaviors_forSer.Values)
+                    foreach (var beh in _staticClassData._attributeBehaviors_forSer.Values.OrderBy(m => m.SerializationOrder))
                     {
                         if (_serialized.Contains(beh)) continue;
                         _serialized.Add(beh);

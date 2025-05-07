@@ -8,7 +8,7 @@ namespace MapXML.Attributes
         public readonly string NodeName;
         internal readonly DeserializationPolicy Policy;
         public readonly XMLSourceType SourceType;
-        public int SerializationOrder { get; set; } = int.MaxValue;
+        public int SerializationOrder { get; set; } = byte.MaxValue;
         public bool CanSerialize { get; set; } = true;
         public bool CanDeserialize { get; set; } = true;
         internal AbstractXMLMemberAttribute(string xmlAttributeName,
