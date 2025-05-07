@@ -205,7 +205,7 @@ namespace MapXML
         {
             CultureInfo cult;
 
-            if (_firstLevelObjects.Count > 1 && IsValidXMLNodeName(Options.AdditionalRootNode!))
+            if (_firstLevelObjects.Count > 1 && !IsValidXMLNodeName(Options.AdditionalRootNode!))
             {
                 throw new NotSupportedException($"Cannot serialize multiple first level objects without a root node; please specify a VALID root node name through the {nameof(ISerializationOptions.AdditionalRootNode)} option.");
             }

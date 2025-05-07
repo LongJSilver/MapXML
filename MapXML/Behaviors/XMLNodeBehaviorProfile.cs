@@ -247,8 +247,11 @@ namespace MapXML.Behaviors
                     bool isMethod = m is MethodInfo;
 
                     if (!isPropOrField && !isMethod) continue;
-                    if (m.IsDefined(typeof(NonSerializedAttribute))) continue;
-                    if (m.IsDefined(typeof(XMLNonSerializedAttribute))) continue;
+                    if (allowImplicitFields)
+                    {
+                        if (m.IsDefined(typeof(NonSerializedAttribute))) continue;
+                        if (m.IsDefined(typeof(XMLNonSerializedAttribute))) continue;
+                    }
 
                     int added = 0;
                     foreach (var att in m.GetCustomAttributes(true))
@@ -757,7 +760,6 @@ namespace MapXML.Behaviors
             beh.ProcessAttribute(this, NodeName, AttributeName, AttributeValue);
             return true;
         }
-
 
         internal void StoreTextContent(string text)
         {
