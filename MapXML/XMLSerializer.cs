@@ -27,7 +27,7 @@ namespace MapXML
         }
 
     }
-
+    public enum SerializationPriority { Attribute = 0, Child };
     public enum AttributeOmissionPolicy : byte
     {
         /// <summary>
@@ -43,6 +43,7 @@ namespace MapXML
         /// </summary>
         AlwaysWhenNull
     }
+
     public interface ISerializationOptions : IXMLOptions
     {
         /// <summary>
@@ -64,6 +65,13 @@ namespace MapXML
         /// <para/>DEFAULT: false
         /// </summary>
         AttributeOmissionPolicy AttributeOmissionPolicy { get; }
+
+        /// <summary>
+        /// 
+        /// <para/>DEFAULT: <see cref="SerializationPriority.Attribute"/>
+        /// </summary>
+        SerializationPriority SerializationPriority { get; }
+
         /// <summary>
         /// <para/>DEFAULT: UTF8
         /// </summary>
@@ -90,6 +98,14 @@ namespace MapXML
         public ISerializationOptionsBuilder OmitAttributes(AttributeOmissionPolicy policy);
 
         /// <summary>
+        /// 
+        /// Whenever a value is serializable both as an attribute and as a child node, this parameter determines which one is used
+        /// 
+        /// <para/>DEFAULT: <see cref="SerializationPriority.Attribute"/>
+        /// </summary>
+        public ISerializationOptionsBuilder WithSerializationPriorityTo(SerializationPriority priority);
+
+        /// <summary>
         /// The name of a root node to be included in the serialization process.
         /// If there is only one 'first level' node, the <see cref="AdditionalRootNode"/> is optional, 
         /// otherwise it is required and its absence will cause an exception to be thrown.
@@ -110,9 +126,9 @@ namespace MapXML
         {
             public DefaultOptions(IXMLOptions? CopyFrom = null) : base(CopyFrom)
             {
-                if(CopyFrom is ISerializationOptions so)
+                if (CopyFrom is ISerializationOptions so)
                 {
-                    this.Encoding= so.Encoding;
+                    this.Encoding = so.Encoding;
                     this.AttributeOmissionPolicy = so.AttributeOmissionPolicy;
                     this.AdditionalRootNode = so.AdditionalRootNode;
                     this.PreferTextNodesForLookups = so.PreferTextNodesForLookups;
@@ -124,7 +140,8 @@ namespace MapXML
             public AttributeOmissionPolicy AttributeOmissionPolicy { get; private set; } = AttributeOmissionPolicy.AsDictatedByCodeAnnotations;
             public string? AdditionalRootNode { get; private set; }
             public Encoding Encoding { get; private set; } = Encoding.UTF8;
-#pragma warning restore CS1805 
+            public SerializationPriority SerializationPriority { get; private set; } = SerializationPriority.Attribute;
+#pragma warning restore CS1805
 
             public ISerializationOptions Build() => this;
 
@@ -139,6 +156,11 @@ namespace MapXML
                 return this;
             }
 
+            public ISerializationOptionsBuilder WithSerializationPriorityTo(SerializationPriority priority)
+            {
+                this.SerializationPriority = priority;
+                return this;
+            }
             ISerializationOptionsBuilder ISerializationOptionsBuilder.WithAdditionalRootNode(string s)
             {
                 if (IsValidXMLNodeName(s))
@@ -163,6 +185,7 @@ namespace MapXML
                     throw new ArgumentException($"Unable to find Encoding '{e}'");
                 return this;
             }
+
         }
 
 
@@ -229,7 +252,6 @@ namespace MapXML
                     {
                         xmlWriter.WriteStartElement(Options.AdditionalRootNode);
                         xmlWriter.WriteAttributeString(FormatProviderAttributeName, ContextStack.Culture.Name);
-                        Push(Options.AdditionalRootNode);
                     }
 
                     IEnumerable<(string name, object item, string? formatName)> toSerialize =
@@ -264,6 +286,27 @@ namespace MapXML
             }
         }
 
+        private bool ShouldSerializeAs(string nodeName, XMLSourceType asWhat)
+        {
+            if (asWhat != XMLSourceType.Attribute && asWhat != XMLSourceType.Child)
+            {
+                throw new ArgumentException("Invalid Query.");
+            }
+
+            IReadOnlyDictionary<string, XMLSourceType>? targets = this.ContextStack.StaticClassData?.SerializableMemberTargets;
+            if (targets == null) return true;
+
+            if (!targets.TryGetValue(nodeName, out XMLSourceType allowedTargets)) return false;
+
+            //not interested in anything else
+            allowedTargets &= XMLSourceType.ChildOrAttribute;
+
+            if (allowedTargets == asWhat) return true;
+
+            //if we get here, then the allowed targets include both attribute and child, and we turn to our options do decide what to do
+            return (asWhat == XMLSourceType.Child && this.Options.SerializationPriority == SerializationPriority.Child)
+                || (asWhat == XMLSourceType.Attribute && this.Options.SerializationPriority == SerializationPriority.Attribute);
+        }
 
         private void WriteCurrentNodeCreate(XmlWriter xmlWriter)
         {
@@ -277,7 +320,8 @@ namespace MapXML
 
             foreach (var attribute in attributes)
             {
-                xmlWriter.WriteAttributeString(attribute.Key, attribute.Value);
+                if (ShouldSerializeAs(attribute.Key, XMLSourceType.Attribute))
+                    xmlWriter.WriteAttributeString(attribute.Key, attribute.Value);
             }
 
             string? textContent = ContextStack.GetTextContentToSerialize();
@@ -293,6 +337,7 @@ namespace MapXML
                 {
                     foreach ((string nodeName, object child, Type targetType, DeserializationPolicy policy) in children)
                     {
+                        if (!ShouldSerializeAs(nodeName, XMLSourceType.Child)) continue;
                         if (policy == DeserializationPolicy.Create)
                         {
                             Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.Options, nodeName, targetType, child));

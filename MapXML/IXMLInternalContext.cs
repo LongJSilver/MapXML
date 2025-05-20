@@ -55,6 +55,7 @@ namespace MapXML
         /// <param name="level"></param>
         /// <returns></returns>
         object? GetParent(int level = 1);
+        IXMLOptions Options { get; }
     }
 
     /// <summary>

@@ -708,7 +708,7 @@ namespace MapXML.Behaviors
                         dc.OnDeserialization(CurrentInstance);
                     //--------------------------//
                     if (_staticClassData != null)
-                        foreach (XMLMemberBehavior item in _staticClassData.AllAttributes_ForDes)
+                        foreach (XMLMemberBehavior item in _staticClassData.AllDeserializationBehaviors)
                         {
                             item.OnFinalized(CurrentInstance, this);
                         }

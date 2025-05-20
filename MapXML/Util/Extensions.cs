@@ -29,7 +29,17 @@ namespace MapXML.Utils
         }
 
 
-
+        public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue toAdd, Func<TValue, TValue> UpdateAction)
+        {
+            if (dict.TryGetValue(key, out var currentVal))
+            {
+                dict[key] = UpdateAction(currentVal);
+            }
+            else
+            {
+                dict.Add(key, toAdd);
+            }
+        }
 
         //*****************************************//
 
