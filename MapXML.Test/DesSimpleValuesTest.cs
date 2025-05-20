@@ -1,10 +1,4 @@
-﻿using MapXML.Utils;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using MapXML;
-using MapXML.Attributes;
+﻿using MapXML.Attributes;
 
 namespace MapXML.Tests
 {

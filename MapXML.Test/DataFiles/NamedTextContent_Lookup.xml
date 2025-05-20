@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <xml>
-  <AnimalClasses>     
+  <AnimalClasses>
     <Habitat Name="Forest" ID="B81A9EE7-6F1B-4348-BF43-D309EB3CB87E" />
     <Habitat Name="Swamp" ID="01EC8206-4DB3-4717-8E6A-7060BFA04F07" />
-    
+
     <AnimalInfo Name="Lion">
       <Habitat>{B81A9EE7-6F1B-4348-BF43-D309EB3CB87E}</Habitat>
-    </AnimalInfo>   
+    </AnimalInfo>
     <AnimalInfo Name="Alligator">
       <Habitat>{01EC8206-4DB3-4717-8E6A-7060BFA04F07}</Habitat>
     </AnimalInfo>
-    
-    
+
   </AnimalClasses>
-  
-  
 </xml>

@@ -73,7 +73,7 @@ namespace MapXML.Tests
                        this.EnumVariable == other.EnumVariable;
             }
         }
-       
+
     }
 
 }

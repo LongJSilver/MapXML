@@ -1,6 +1,4 @@
-﻿using MapXML.Utils;
-using System.Collections;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace MapXML.Tests
 {

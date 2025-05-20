@@ -34,9 +34,9 @@ namespace MapXML
         {
             public DefaultOptions(IXMLOptions? CopyFrom = null) : base(CopyFrom)
             {
-                if(CopyFrom is IDeserializationOptions so)
+                if (CopyFrom is IDeserializationOptions so)
                 {
-                    this.IgnoreRootNode= so.IgnoreRootNode;
+                    this.IgnoreRootNode = so.IgnoreRootNode;
                 }
             }
 
@@ -142,7 +142,7 @@ namespace MapXML
                     // we where NOT told to ignore the root node, and we were given NO owner for it,
                     // so we go ahead and treat this like any other node
                     LogicalLevelOffset = 0; // the root node will be associated to whatever item we deserialize first
-                }                
+                }
 
             }
 

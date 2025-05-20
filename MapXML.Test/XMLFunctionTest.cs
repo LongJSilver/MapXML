@@ -1,11 +1,9 @@
 ﻿using MapXML.Attributes;
-using MapXML.Utils;
-using System.Linq;
 
 namespace MapXML.Tests
 {
     [TestClass()]
-    public class XMLFunctionTests : BaseTestClass
+    public class XMLFunctionTest : BaseTestClass
     {
         [TestMethod]
         public void SimpleLookup()

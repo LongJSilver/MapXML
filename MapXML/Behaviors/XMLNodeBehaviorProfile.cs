@@ -30,7 +30,6 @@ namespace MapXML.Behaviors
         public XMLStaticClassData? StaticClassData => _staticClassData;
         public IXMLSerializationHandler? Handler => _handler;
         public IDictionary<string, object> CustomData => _customData;
-
         public IXMLOptions Options { get; }
         internal readonly string NodeName;
         internal readonly bool IsSerializing;
@@ -672,7 +671,7 @@ namespace MapXML.Behaviors
         {
             if (!string.IsNullOrEmpty(_TextContent))
             {
-                if (this.GetCurrentInstance() is PlaceHolderForLateLookup phll)
+                if (CurrentInstance is PlaceHolderForLateLookup phll)
                 {
                     object? result = null;
                     bool ok = false;
@@ -724,7 +723,7 @@ namespace MapXML.Behaviors
                 }
 
             }
-            this.Parent?.FinalizedChild(nodeName, Attributes, this.GetCurrentInstance());
+            this.Parent?.FinalizedChild(nodeName, Attributes, CurrentInstance);
 
             //-----//
             XMLNodeBehaviorProfile c = this;
@@ -732,7 +731,7 @@ namespace MapXML.Behaviors
                 Handler?.Finalized(this, nodeName, this.CurrentInstance);
             //----//
         }
-        internal void FinalizedChild(string childNodeName, IReadOnlyDictionary<string, string> childAttributes, object result)
+        internal void FinalizedChild(string childNodeName, IReadOnlyDictionary<string, string> childAttributes, object? result)
         {
             ChildrenCount++;
             if (_staticClassData != null)

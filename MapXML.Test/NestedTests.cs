@@ -1,8 +1,5 @@
 ﻿using MapXML.Attributes;
-using MapXML.Utils;
 using System.Collections.ObjectModel;
-using static MapXML.Tests.NamedTextContent_Create_Test;
-using System.Reflection.Metadata;
 
 namespace MapXML.Tests
 {
@@ -16,7 +13,7 @@ namespace MapXML.Tests
             BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<OneNestedChild>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner:null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             OneNestedChild svc = handler.GetResults<OneNestedChild>().First(n => n.Name.Equals("Parent"));
@@ -83,7 +80,7 @@ namespace MapXML.Tests
             BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenCollection>("SimpleValue");
 
-      
+
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
@@ -132,7 +129,7 @@ namespace MapXML.Tests
             Stream s = GetTestXML("Nested");
             BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
-         
+
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 

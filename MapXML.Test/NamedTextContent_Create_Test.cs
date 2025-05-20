@@ -1,5 +1,4 @@
 ﻿using MapXML.Attributes;
-using MapXML.Utils;
 
 namespace MapXML.Tests
 {

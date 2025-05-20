@@ -262,7 +262,7 @@ namespace MapXML
 
                     foreach (var firstLevelItem in toSerialize)
                     {
-                        Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.Options,
+                        Push(XMLNodeBehaviorProfile.CreateSerializationNode(Handler, this.Options,
                             firstLevelItem.name, firstLevelItem.item.GetType(),
                             firstLevelItem.item, firstLevelItem.formatName));
                         WriteCurrentNodeCreate(xmlWriter);
@@ -338,9 +338,10 @@ namespace MapXML
                     foreach ((string nodeName, object child, Type targetType, DeserializationPolicy policy) in children)
                     {
                         if (!ShouldSerializeAs(nodeName, XMLSourceType.Child)) continue;
+
                         if (policy == DeserializationPolicy.Create)
                         {
-                            Push(XMLNodeBehaviorProfile.CreateSerializationNode(null, this.Options, nodeName, targetType, child));
+                            Push(XMLNodeBehaviorProfile.CreateSerializationNode(this.Handler, this.Options, nodeName, targetType, child));
                             WriteCurrentNodeCreate(xmlWriter);
                             Pop();
                         }

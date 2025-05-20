@@ -1,15 +1,9 @@
-﻿using MapXML.Utils;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using MapXML;
-using MapXML.Attributes;
+﻿using MapXML.Attributes;
 
 namespace MapXML.Tests
 {
     [TestClass]
-    public class Des_RootNodeCornerCases : BaseTestClass
+    public class RootNodeCornerCasesTest : BaseTestClass
     {
         [TestMethod]
         public void IgnoreRoot_WithOwner()
@@ -27,7 +21,7 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
         [TestMethod]
@@ -46,7 +40,7 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
 
@@ -66,7 +60,7 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
         [TestMethod]
@@ -85,10 +79,10 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
-        private void TestResults(BaseTestHandler handler)
+        private void TestResults(BaseTestHandler handler, IDeserializationOptions opt)
         {
             // Retrieve the deserialized results as a list of Movie objects
             Assert.AreEqual(1, handler.GetResults<MovieCollection>().Count, "The number of Movie Collections must be 1.");
@@ -101,7 +95,7 @@ namespace MapXML.Tests
             int i = 0;
 
             // Validate the content of each movie
-           
+
             Assert.AreEqual("The Fellowship of the Ring", movies[i].Title);
             Assert.AreEqual("Peter Jackson", movies[i].Director);
             Assert.AreEqual(2001, movies[i].ReleaseYear);
@@ -124,7 +118,7 @@ namespace MapXML.Tests
 
 
             // ROUND TRIP SERIALIZATION TEST  -----//
-            Assert.IsTrue(RoundTripSerializerTest<MovieCollection>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
+            Assert.IsTrue(RoundTripSerializerTest<MovieCollection>(handler, opt));
         }
     }
 
