@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
-    <BaseVersion>0.1.0-Alpha</BaseVersion>
+    <BaseVersion>0.2.0-Beta</BaseVersion>
   </PropertyGroup>
 
   <ItemGroup>

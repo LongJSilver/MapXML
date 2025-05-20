@@ -8,6 +8,7 @@ using System.Linq;
 
 namespace MapXML
 {
+
     internal sealed class XMLStaticClassData
     {
         public readonly Type Type;
@@ -19,11 +20,13 @@ namespace MapXML
         public readonly XMLMemberBehavior? _textContentBehavior_forSer;
 
         private IEnumerable<XMLFunction> _functions;
-        public IEnumerable<XMLMemberBehavior> AllAttributes_ForDes => (_childBehaviors_forDes.Values).Union(_attributeBehaviors_forDes.Values).Distinct();
-        public IEnumerable<XMLMemberBehavior> AllAttributes_ForSer => (_childBehaviors_forSer.Values).Union(_attributeBehaviors_forSer.Values).Distinct();
+        public IEnumerable<XMLMemberBehavior> AllDeserializationBehaviors => (_childBehaviors_forDes.Values).Union(_attributeBehaviors_forDes.Values).Distinct();
+        private readonly Dictionary<string, XMLSourceType> _serializableMemberTargets;
+        public IReadOnlyDictionary<string, XMLSourceType> SerializableMemberTargets => _serializableMemberTargets;
         public XMLStaticClassData(Type t, IEnumerable<XMLMemberBehavior> behaviors, IEnumerable<XMLFunction> functions)
         {
             this.Type = t;
+            _serializableMemberTargets = new();
             var forAttributes_forDes = new CIDictionary<XMLMemberBehavior>();
             var forChildren_forDes = new CIDictionary<XMLMemberBehavior>();
             var forAttributes_forSer = new CIDictionary<XMLMemberBehavior>();
@@ -42,14 +45,20 @@ namespace MapXML
                         if (beh.CanDeserialize)
                             forAttributes_forDes.Add(beh.NodeName, beh);
                         if (beh.CanSerializeAsAttribute)
+                        {
                             forAttributes_forSer.Add(beh.NodeName, beh);
+                            _serializableMemberTargets.AddOrUpdate(beh.NodeName, beh.SourceType, (XMLSourceType toUpdate) => toUpdate | beh.SourceType);
+                        }
                     }
                     if (beh.SourceType.HasFlag(XMLSourceType.Child))
                     {
                         if (beh.CanDeserialize)
                             forChildren_forDes.Add(beh.NodeName, beh);
                         if (beh.CanSerializeAsChild)
+                        {
                             forChildren_forSer.Add(beh.NodeName, beh);
+                            _serializableMemberTargets.AddOrUpdate(beh.NodeName, beh.SourceType, (XMLSourceType toUpdate) => toUpdate | beh.SourceType);
+                        }
 
                     }
                     if (beh.SourceType.HasFlag(XMLSourceType.TextContent))

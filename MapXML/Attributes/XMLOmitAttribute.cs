@@ -16,7 +16,6 @@ namespace MapXML.Attributes
 #pragma warning restore CA1711 
 
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
     public abstract class XMLOmitAttribute : Attribute { }
 
 #pragma warning disable CA1711 // The "Delegate" suffix is appropriate here
@@ -25,6 +24,7 @@ namespace MapXML.Attributes
         public abstract bool ShouldOmit(string nodename, object? value, string? sValue, Type t);
     }
 #pragma warning restore CA1711 
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
     public class XMLOmitWhenNullAttribute : XMLOmitWithDelegate
     {
         public static bool ShouldOmitRule(string nodename, object? value, string? sValue, Type t)
@@ -33,6 +33,7 @@ namespace MapXML.Attributes
         => ShouldOmitRule(nodename, value, sValue, t);
     }
 
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
     public class XMLOmitWhenDefaultAttribute : XMLOmitWithDelegate
     {
         private static Dictionary<Type, object> _defaultValueCache = new Dictionary<Type, object>();
@@ -63,6 +64,7 @@ namespace MapXML.Attributes
         => ShouldOmitRule(nodename, value, sValue, t);
     }
 
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
     public class XMLOmitWhenAttribute : XMLOmitWithDelegate
     {
         public readonly object Value;

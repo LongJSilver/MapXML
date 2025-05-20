@@ -1,5 +1,4 @@
 ﻿using MapXML.Attributes;
-using MapXML.Utils;
 using System.Collections.ObjectModel;
 
 namespace MapXML.Tests
@@ -11,10 +10,10 @@ namespace MapXML.Tests
         public void OneNestedNode()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<OneNestedChild>("SimpleValue");
 
-            XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner:null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
             OneNestedChild svc = handler.GetResults<OneNestedChild>().First(n => n.Name.Equals("Parent"));
@@ -22,13 +21,16 @@ namespace MapXML.Tests
 
             Assert.AreEqual(4, svc.Child.Integer);
             Assert.AreEqual("Child2", svc.Child.Name);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<OneNestedChild>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
         [TestMethod]
         public void NestedArray()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenArray>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -45,13 +47,16 @@ namespace MapXML.Tests
 
             Assert.AreEqual(4, svc.Children[1].Integer);
             Assert.AreEqual("Child2", svc.Children[1].Name);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<NestedChildrenArray>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
         [TestMethod]
         public void SerializeNestedArray()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenArray>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -63,16 +68,19 @@ namespace MapXML.Tests
             ser.AddItem("SimpleValue", svc);
             ser.Run();
 
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<NestedChildrenArray>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
+
         }
 
         [TestMethod]
         public void NestedCollection()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenCollection>("SimpleValue");
 
-      
+
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
             Assert.AreEqual(3, handler.Results.Count);
@@ -86,13 +94,16 @@ namespace MapXML.Tests
 
             Assert.AreEqual(4, svc.Children.ElementAt(1).Integer);
             Assert.AreEqual("Child2", svc.Children.ElementAt(1).Name);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<NestedChildrenCollection>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
         [TestMethod]
         public void NestedDictionary()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
 
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
@@ -108,14 +119,17 @@ namespace MapXML.Tests
 
             Assert.AreEqual(4, svc.Children[4.0].Integer);
             Assert.AreEqual("Child2", svc.Children[4.0].Name);
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<NestedChildrenDictionary>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
         [TestMethod]
         public void SerializeNestedDictionary()
         {
             Stream s = GetTestXML("Nested");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<NestedChildrenDictionary>("SimpleValue");
-         
+
             XMLDeserializer xdes = new XMLDeserializer(s, handler, null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
@@ -126,8 +140,11 @@ namespace MapXML.Tests
             XMLSerializer ser = new XMLSerializer(handler, opt);
             ser.AddItem("SimpleValue", svc);
             ser.Run();
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<NestedChildrenDictionary>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
-        private class OneNestedChild
+        private class OneNestedChild : IEquatable<OneNestedChild?>
         {
             [XMLAttribute("Number")]
             public int Integer;
@@ -141,8 +158,24 @@ namespace MapXML.Tests
             [XMLChild("SimpleValue")]
             private OneNestedChild _child;
             public OneNestedChild Child => _child;
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as OneNestedChild);
+            }
+
+            public bool Equals(OneNestedChild? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Float == other.Float &&
+                       this.Double == other.Double &&
+                       this.Name == other.Name &&
+                       EqualityComparer<OneNestedChild>.Default.Equals(this._child, other._child);
+            }
         }
-        private class NestedChildrenArray
+
+        private class NestedChildrenArray : IEquatable<NestedChildrenArray?>
         {
             [XMLAttribute("Number")]
             public int Integer;
@@ -155,8 +188,24 @@ namespace MapXML.Tests
 
             [XMLChild("SimpleValue")]
             public NestedChildrenArray[] Children;
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as NestedChildrenArray);
+            }
+
+            public bool Equals(NestedChildrenArray? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Float == other.Float &&
+                       this.Double == other.Double &&
+                       this.Name == other.Name &&
+                       BaseTestClass.Compare(this.Children, other.Children);
+            }
         }
-        private class NestedChildrenCollection
+
+        private class NestedChildrenCollection : IEquatable<NestedChildrenCollection?>
         {
             [XMLAttribute("Number")]
             public int Integer;
@@ -174,8 +223,34 @@ namespace MapXML.Tests
             {
                 Children = new Collection<NestedChildrenCollection>();
             }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as NestedChildrenCollection);
+            }
+
+            public bool Equals(NestedChildrenCollection? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Float == other.Float &&
+                       this.Double == other.Double &&
+                       this.Name == other.Name &&
+                       Compare(this.Children, other.Children);
+            }
+
+            public static bool operator ==(NestedChildrenCollection? left, NestedChildrenCollection? right)
+            {
+                return EqualityComparer<NestedChildrenCollection>.Default.Equals(left, right);
+            }
+
+            public static bool operator !=(NestedChildrenCollection? left, NestedChildrenCollection? right)
+            {
+                return !(left == right);
+            }
         }
-        private class NestedChildrenDictionary
+
+        private class NestedChildrenDictionary : IEquatable<NestedChildrenDictionary?>
         {
             [XMLAttribute("Number")]
             public int Integer;
@@ -192,6 +267,21 @@ namespace MapXML.Tests
             public NestedChildrenDictionary()
             {
                 Children = new Dictionary<double, NestedChildrenDictionary>();
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return this.Equals(obj as NestedChildrenDictionary);
+            }
+
+            public bool Equals(NestedChildrenDictionary? other)
+            {
+                return other is not null &&
+                       this.Integer == other.Integer &&
+                       this.Float == other.Float &&
+                       this.Double == other.Double &&
+                       this.Name == other.Name &&
+                       Compare(this.Children, other.Children);
             }
         }
 

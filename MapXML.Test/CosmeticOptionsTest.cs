@@ -1,11 +1,14 @@
 ﻿using MapXML.Attributes;
+using MapXML.Utils;
+using System.Xml;
+using System.Xml.XPath;
 namespace MapXML.Tests
 {
     [TestClass()]
-    public class NamedTextContent_Lookup_Test : BaseTestClass
+    public class CosmeticOptionsTest : BaseTestClass
     {
         [TestMethod]
-        public void LookupValues()
+        public void PreferTextNodesForLookup()
         {
             BaseTestHandler handler = new BaseTestHandler();
             handler.RegisterTypeConverter(typeof(Guid),
@@ -18,29 +21,64 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(GetTestXML("NamedTextContent_Lookup"), handler, RootNodeOwner: null, XMLDeserializer.DefaultOptions_IgnoreRootNode);
             xdes.Run();
 
-            //*********************//
             var results = handler.GetResults<AnimalClasses>().FirstOrDefault();
-            Assert.IsNotNull(results);
-            Assert.AreEqual(2, results.Habitats.Count);
-            Assert.AreEqual(2, results.Animals.Count);
 
-            var forestHabitat = results.Habitats[new Guid("B81A9EE7-6F1B-4348-BF43-D309EB3CB87E")];
-            Assert.AreEqual("Forest", forestHabitat.Name);
-
-            var swampHabitat = results.Habitats[new Guid("01EC8206-4DB3-4717-8E6A-7060BFA04F07")];
-            Assert.AreEqual("Swamp", swampHabitat.Name);
-
-            var lion = results.Animals.FirstOrDefault(a => a.Name == "Lion");
-            Assert.IsNotNull(lion);
-            Assert.AreEqual(forestHabitat, lion.Habitat);
-
-            var alligator = results.Animals.FirstOrDefault(a => a.Name == "Alligator");
-            Assert.IsNotNull(alligator);
-            Assert.AreEqual(swampHabitat, alligator.Habitat);
             //*********************//
+            // TEST 1: Serialize with Text Node preference
+            ISerializationOptions opt = XMLSerializer.OptionsBuilder()
+                .PreferTextNodesForLookups(true).Build();
 
-            // ROUND TRIP SERIALIZATION TEST  -----//
-            Assert.IsTrue(RoundTripSerializerTest<AnimalClasses>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
+            XMLSerializer ser = new XMLSerializer(handler, opt);
+            handler.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
+            ser.Run();
+
+            string XML_PrefersTextNodes = ser.Result;
+
+            // Use XPath to check that the lookup values are serialized as text nodes
+            var doc1 = new XmlDocument();
+            doc1.LoadXml(XML_PrefersTextNodes);
+            XPathNavigator? nav1 = doc1.CreateNavigator();
+            // Select all AnimalInfo/Habitat nodes and check they have text content, not attribute
+            XPathNodeIterator habitatNodes1 = nav1!.Select("//AnimalInfo/Habitat");
+            while (habitatNodes1.MoveNext())
+            {
+                XPathNavigator? node = habitatNodes1.Current;
+                Assert.IsNotNull(node);
+                // Should have text content
+                string? text = node!.Value?.Trim();
+                Assert.IsFalse(string.IsNullOrEmpty(text), "Habitat node should have text content.");
+                // Should not have any attributes
+                Assert.AreEqual(0, node.Select("@*").Count, "Habitat node should not have attributes.");
+            }
+
+            //*********************//
+            // TEST 2: Serialize with Attribute preference
+            opt = XMLSerializer.OptionsBuilder()
+               .PreferTextNodesForLookups(false).Build();
+
+            ser = new XMLSerializer(handler, opt);
+            handler.GetResults<object>().ForEach(o => ser.AddItem("AnimalClasses", o));
+            ser.Run();
+
+            string XML_PrefersAttributes = ser.Result;
+
+            // Use XPath to check that the lookup values are serialized as attributes
+            XmlDocument doc2 = new XmlDocument();
+            doc2.LoadXml(XML_PrefersAttributes);
+            XPathNavigator? nav2 = doc2.CreateNavigator();
+            // Select all AnimalInfo/Habitat nodes and check they have an attribute (e.g. "ID" or similar)
+            XPathNodeIterator habitatNodes2 = nav2!.Select("//AnimalInfo/Habitat");
+            while (habitatNodes2.MoveNext())
+            {
+                XPathNavigator? node = habitatNodes2.Current;
+                Assert.IsNotNull(node);
+                // Check for "ID" attribute
+                var idAttribute = node!.GetAttribute("ID", "");
+                Assert.IsTrue(!string.IsNullOrEmpty(idAttribute));
+
+                string? text = node!.Value?.Trim();
+                Assert.IsTrue(string.IsNullOrEmpty(text), "Habitat node should not have text content when using attributes.");
+            }
         }
 
         private class AnimalClasses : IEquatable<AnimalClasses?>

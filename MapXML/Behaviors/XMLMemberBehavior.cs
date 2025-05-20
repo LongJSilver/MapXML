@@ -13,7 +13,7 @@ namespace MapXML.Behaviors
         //-----------------------------------------------------------------//
         public string NodeName => _attribute?.NodeName ?? this.Member.Name;
         public abstract Type TypeToCreate { get; }
-        public int SerializationOrder { get; set; } = int.MaxValue;
+        public int SerializationOrder { get; set; } = byte.MaxValue;
         public XMLSourceType SourceType { get; }
         internal DeserializationPolicy Policy { get; }
         private ConvertFromString? _conversionFromString_nullable;

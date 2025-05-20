@@ -27,10 +27,9 @@ namespace MapXML.Behaviors
         private static Dictionary<Type, XMLStaticClassData> __typeCache =
                    new Dictionary<Type, XMLStaticClassData>();
 
-        XMLStaticClassData? IXMLInternalContext.StaticClassData => _staticClassData;
-        public IXMLSerializationHandler? Handler => GetHandler();
+        public XMLStaticClassData? StaticClassData => _staticClassData;
+        public IXMLSerializationHandler? Handler => _handler;
         public IDictionary<string, object> CustomData => _customData;
-
         public IXMLOptions Options { get; }
         internal readonly string NodeName;
         internal readonly bool IsSerializing;
@@ -41,7 +40,9 @@ namespace MapXML.Behaviors
         internal bool IsCreation { get; private set; }
         internal CultureInfo? Culture { get; set; }
         IFormatProvider? IXMLInternalContext.FormatProvider => GetFormat();
-        public int Level { get; set; }
+        public int XMLLevel { get; internal set; }
+        public int LogicalLevel { get; internal set; }
+
         internal readonly IReadOnlyDictionary<string, string> Attributes;
         /****** STATE ******/
         internal bool EncounteredTextContent => _TextContent != null;
@@ -59,14 +60,6 @@ namespace MapXML.Behaviors
                 prof = prof.Parent;
             return prof?.Culture;
         }
-        private IXMLSerializationHandler? GetHandler()
-        {
-            XMLNodeBehaviorProfile prof = this;
-            while (prof._handler == null && prof.Parent != null)
-                prof = prof.Parent;
-            return prof?._handler;
-        }
-
 
         private XMLNodeBehaviorProfile(
             IXMLSerializationHandler? handler, IXMLOptions options,
@@ -199,10 +192,9 @@ namespace MapXML.Behaviors
             }
             else
             {
-
                 if (_staticClassData != null)
                 {
-                    foreach (var beh in _staticClassData._attributeBehaviors_forSer.Values)
+                    foreach (var beh in _staticClassData._attributeBehaviors_forSer.Values.OrderBy(m => m.SerializationOrder))
                     {
                         if (_serialized.Contains(beh)) continue;
                         _serialized.Add(beh);
@@ -248,8 +240,11 @@ namespace MapXML.Behaviors
                     bool isMethod = m is MethodInfo;
 
                     if (!isPropOrField && !isMethod) continue;
-                    if (m.IsDefined(typeof(NonSerializedAttribute))) continue;
-                    if (m.IsDefined(typeof(XMLNonSerializedAttribute))) continue;
+                    if (allowImplicitFields)
+                    {
+                        if (m.IsDefined(typeof(NonSerializedAttribute))) continue;
+                        if (m.IsDefined(typeof(XMLNonSerializedAttribute))) continue;
+                    }
 
                     int added = 0;
                     foreach (var att in m.GetCustomAttributes(true))
@@ -440,7 +435,7 @@ namespace MapXML.Behaviors
         }
         internal void InjectDependencies(object newObject)
         {
-            GetHandler()?.InjectDependencies(this, newObject);
+            Handler?.InjectDependencies(this, newObject);
         }
         internal bool InfoForNode(string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
             [MaybeNullWhen(false)][NotNullWhen(true)] out Type? resultType)
@@ -456,11 +451,11 @@ namespace MapXML.Behaviors
             }
 
             /*
-             Nota: qui invochiamo GetHandler() perché non siamo interessati a chiedere ai nostri Parent informazioni
+             Nota: qui invochiamo semplicemente l'Handler perché non siamo interessati a chiedere ai nostri Parent informazioni
              su un nodo che abbiamo incontrato noi. Se questa informazione non è nei nostri staticClassData la chiediamo
-             al context come ultima spiaggia e basta.
+             all'handler come ultima spiaggia e basta.
              */
-            if (GetHandler()?.InfoForNode(this, nodeName, attributes, out policy, out resultType) ?? false)
+            if (Handler?.InfoForNode(this, nodeName, attributes, out policy, out resultType) ?? false)
                 return true;
 
             return false;
@@ -676,7 +671,7 @@ namespace MapXML.Behaviors
         {
             if (!string.IsNullOrEmpty(_TextContent))
             {
-                if (this.GetCurrentInstance() is PlaceHolderForLateLookup phll)
+                if (CurrentInstance is PlaceHolderForLateLookup phll)
                 {
                     object? result = null;
                     bool ok = false;
@@ -712,7 +707,7 @@ namespace MapXML.Behaviors
                         dc.OnDeserialization(CurrentInstance);
                     //--------------------------//
                     if (_staticClassData != null)
-                        foreach (XMLMemberBehavior item in _staticClassData.AllAttributes_ForDes)
+                        foreach (XMLMemberBehavior item in _staticClassData.AllDeserializationBehaviors)
                         {
                             item.OnFinalized(CurrentInstance, this);
                         }
@@ -728,15 +723,15 @@ namespace MapXML.Behaviors
                 }
 
             }
-            this.Parent?.FinalizedChild(nodeName, Attributes, this.GetCurrentInstance());
+            this.Parent?.FinalizedChild(nodeName, Attributes, CurrentInstance);
 
             //-----//
             XMLNodeBehaviorProfile c = this;
             if (CurrentInstance != null)
-                GetHandler()?.Finalized(this, nodeName, this.CurrentInstance);
+                Handler?.Finalized(this, nodeName, this.CurrentInstance);
             //----//
         }
-        internal void FinalizedChild(string childNodeName, IReadOnlyDictionary<string, string> childAttributes, object result)
+        internal void FinalizedChild(string childNodeName, IReadOnlyDictionary<string, string> childAttributes, object? result)
         {
             ChildrenCount++;
             if (_staticClassData != null)
@@ -758,7 +753,6 @@ namespace MapXML.Behaviors
             beh.ProcessAttribute(this, NodeName, AttributeName, AttributeValue);
             return true;
         }
-
 
         internal void StoreTextContent(string text)
         {
@@ -834,8 +828,8 @@ namespace MapXML.Behaviors
                 return true;
             }
 
-            // No luck, let's check if we have a handler up the stack and if IT can offer a conversion for our target type
-            if ((GetHandler()?.HasConversionFromString(ToType, out ConvertFromString? converter) ?? false)
+            // No luck, let's check if we have a handler and if IT can offer a conversion for our target type
+            if ((Handler?.HasConversionFromString(ToType, out ConvertFromString? converter) ?? false)
                 || __standardConversions.TryGetValue(ToType, out converter)
                 )
             {
@@ -867,8 +861,8 @@ namespace MapXML.Behaviors
                 return true;
             }
 
-            // No luck, let's check if we have a handler up the stack and if IT can offer a conversion for our target type
-            if ((GetHandler()?.HasConversionToString(FromType, out ConvertToString? converter) ?? false)
+            // No luck, let's check if we have a handler and if IT can offer a conversion for our target type
+            if ((Handler?.HasConversionToString(FromType, out ConvertToString? converter) ?? false)
                 || __reverseConversions.TryGetValue(FromType, out converter))
             {
                 result = converter(value, Culture);
@@ -897,7 +891,7 @@ namespace MapXML.Behaviors
                 //are usually more likely to yield a positive result
                 //and here we only care for *ANY* conversion function, regardless of priority
                 if (__reverseConversions.ContainsKey(TargetType)) return true;
-                if (GetHandler()?.HasConversionToString(TargetType, out _) ?? false) return true;
+                if (Handler?.HasConversionToString(TargetType, out _) ?? false) return true;
 
                 (XMLFunction function, object instance)? f = null;
                 XMLNodeBehaviorProfile? current = this;

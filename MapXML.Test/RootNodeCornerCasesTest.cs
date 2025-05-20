@@ -1,21 +1,15 @@
-﻿using MapXML.Utils;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using MapXML;
-using MapXML.Attributes;
+﻿using MapXML.Attributes;
 
 namespace MapXML.Tests
 {
     [TestClass]
-    public class Des_RootNodeCornerCases : BaseTestClass
+    public class RootNodeCornerCasesTest : BaseTestClass
     {
         [TestMethod]
         public void IgnoreRoot_WithOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = new MovieCollection();
@@ -27,14 +21,14 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
         [TestMethod]
         public void IgnoreRoot_WithoutOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases_ExtraRoot");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = null;// new MovieCollection();
@@ -46,7 +40,7 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
 
@@ -54,7 +48,7 @@ namespace MapXML.Tests
         public void DontIgnoreRoot_WithOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = new MovieCollection();
@@ -66,14 +60,14 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
         [TestMethod]
         public void DontIgnoreRoot_WithoutOwner()
         {
             Stream s = GetTestXML("RootNodeCornerCases");
-            DefaultHandler handler = new DefaultHandler();
+            BaseTestHandler handler = new BaseTestHandler();
             handler.Associate<MovieCollection>("MovieCollection");
 
             object? owner = null;// new MovieCollection();
@@ -85,10 +79,10 @@ namespace MapXML.Tests
             XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: owner, opt);
             xdes.Run();
 
-            TestResults(handler);
+            TestResults(handler, opt);
         }
 
-        private void TestResults(DefaultHandler handler)
+        private void TestResults(BaseTestHandler handler, IDeserializationOptions opt)
         {
             // Retrieve the deserialized results as a list of Movie objects
             Assert.AreEqual(1, handler.GetResults<MovieCollection>().Count, "The number of Movie Collections must be 1.");
@@ -101,7 +95,7 @@ namespace MapXML.Tests
             int i = 0;
 
             // Validate the content of each movie
-           
+
             Assert.AreEqual("The Fellowship of the Ring", movies[i].Title);
             Assert.AreEqual("Peter Jackson", movies[i].Director);
             Assert.AreEqual(2001, movies[i].ReleaseYear);
@@ -122,22 +116,37 @@ namespace MapXML.Tests
             Assert.AreEqual("The Two Towers", movies[i].Prequel?.Title);
             i++;
 
+
+            // ROUND TRIP SERIALIZATION TEST  -----//
+            Assert.IsTrue(RoundTripSerializerTest<MovieCollection>(handler, opt));
         }
     }
 
-    public class MovieCollection
+    public class MovieCollection : IEquatable<MovieCollection?>
     {
         [XMLChild("Movie")]
         public List<Movie> Movies { get; set; } = new List<Movie>();
+
+        public override bool Equals(object? obj)
+        {
+            return this.Equals(obj as MovieCollection);
+        }
+
+        public bool Equals(MovieCollection? other)
+        {
+            return other is not null &&
+                   BaseTestClass.Compare(this.Movies, other.Movies);
+        }
 
         [XMLFunction]
         public Movie? GetMovie([XMLParameter("Title")] string title)
         {
             return Movies.FirstOrDefault(m => m.Title == title);
         }
+
     }
 
-    public class Movie
+    public class Movie : IEquatable<Movie?>
     {
         public string Title { get; set; }
         public string Director { get; set; }
@@ -146,6 +155,21 @@ namespace MapXML.Tests
 
         [XMLChild("Prequel", DeserializationPolicy.Lookup)]
         public Movie Prequel { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return this.Equals(obj as Movie);
+        }
+
+        public bool Equals(Movie? other)
+        {
+            return other is not null &&
+                   this.Title == other.Title &&
+                   this.Director == other.Director &&
+                   this.ReleaseYear == other.ReleaseYear &&
+                   this.Genre == other.Genre &&
+                   EqualityComparer<Movie>.Default.Equals(this.Prequel, other.Prequel);
+        }
     }
 
 

@@ -29,7 +29,17 @@ namespace MapXML.Utils
         }
 
 
-
+        public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue toAdd, Func<TValue, TValue> UpdateAction)
+        {
+            if (dict.TryGetValue(key, out var currentVal))
+            {
+                dict[key] = UpdateAction(currentVal);
+            }
+            else
+            {
+                dict.Add(key, toAdd);
+            }
+        }
 
         //*****************************************//
 
@@ -41,7 +51,7 @@ namespace MapXML.Utils
         }
         public static bool IsFieldOrProperty(this MemberInfo member) => member is FieldInfo || member is PropertyInfo;
 
-        public static object GetValue(this MemberInfo member, object instance)
+        public static object? GetValue(this MemberInfo member, object instance)
         {
             if (member is FieldInfo field) return field.GetValue(instance);
             else if (member is PropertyInfo pinfo) return pinfo.GetValue(instance);

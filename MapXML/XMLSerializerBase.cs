@@ -49,6 +49,15 @@ namespace MapXML
 
         protected abstract class AbstractOptionsBuilder<T> : IXMLOptionsBuilder<T>, IXMLOptions where T : IXMLOptionsBuilder<T>
         {
+            protected AbstractOptionsBuilder(IXMLOptions? CopyFrom = null)
+            {
+                if (CopyFrom != null)
+                {
+                    AllowImplicitFields = CopyFrom.AllowImplicitFields;
+                    Culture = CopyFrom.Culture;
+                }
+            }
+
             public CultureInfo? Culture { get; private set; }
             public bool AllowImplicitFields { get; private set; }
             T IXMLOptionsBuilder<T>.AllowImplicitFields(bool b)
@@ -74,9 +83,6 @@ namespace MapXML
                 Culture = null;
                 return (T)(object)this;
             }
-
-
-
         }
 
         public const string FormatProviderAttributeName = "xml.format";
@@ -84,16 +90,18 @@ namespace MapXML
         private XMLNodeBehaviorProfile? _contextStack;
         internal XMLNodeBehaviorProfile ContextStack => _contextStack!;
         protected IXMLOptions Options { get; }
-        public string CurrentNodeName => _path.Peek().CurrentNodeName;
-        public int CurrentLevel => _path.Peek().CurrentLevel;
-        public string CurrentPath => _path.Peek().Path;
-
+        public string CurrentNodeName => _path.Count == 0 ? "" : _path.Peek().CurrentNodeName;
+        public int CurrentLevel => _path.Count - 1;
+        protected int LogicalLevelOffset { get; set; }
+        public string CurrentPath => _path.Count == 0 ? "" : _path.Peek().Path;
+        public IXMLSerializationHandler? Handler { get; private set; }
 
         public abstract void Run();
 
         internal void ClearStack()
         {
             _contextStack = null;
+            _path.Clear();
         }
         internal void Pop()
         {
@@ -116,33 +124,38 @@ namespace MapXML
             }
         }
         private readonly Stack<PathElement> _path;
-
-        protected XMLSerializerBase(IXMLOptions options)
+        protected XMLSerializerBase(IXMLOptions options, IXMLSerializationHandler? handler)
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
             _path = new Stack<PathElement>();
-            _path.Push(new PathElement("", -1, 0, "/"));
+            this.Handler = handler;
         }
 
         internal void Push(XMLNodeBehaviorProfile c)
         {
             if (c != null)
                 c.Parent = _contextStack;
+
             _contextStack = c;
-            if (c?.NodeName != null)
-            {
-                c.Level = CurrentLevel;
-                Push(c.NodeName);
-            }
+            c.XMLLevel = CurrentLevel;
+            c.LogicalLevel = CurrentLevel + LogicalLevelOffset;
+            Push(c.NodeName ?? "");
         }
 
         internal void Push(string NodeName)
         {
-            PathElement currentElement = _path.Pop();
-            currentElement.CurrentChildrenIndex++;
-            _path.Push(currentElement);
-            string newPath = $"{currentElement.Path}[{currentElement.CurrentChildrenIndex}:{NodeName}]/";
-            _path.Push(new PathElement(NodeName, currentElement.CurrentLevel + 1, 0, newPath));
+            if (_path.Count == 0)
+            {
+                _path.Push(new PathElement(NodeName, 1, 0, NodeName));
+            }
+            else
+            {
+                PathElement currentElement = _path.Pop();
+                currentElement.CurrentChildrenIndex++;
+                _path.Push(currentElement);
+                string newPath = $"{currentElement.Path}/[{currentElement.CurrentChildrenIndex}:{NodeName}]";
+                _path.Push(new PathElement(NodeName, currentElement.CurrentLevel + 1, 0, newPath));
+            }
         }
 
         [DoesNotReturn]

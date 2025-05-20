@@ -37,7 +37,16 @@ namespace MapXML
 
     public interface IXMLState
     {
-        int Level { get; }
+        /// <summary>
+        /// The depth level based on the current position within the XML Hierarchy
+        /// </summary>
+        int XMLLevel { get; }
+        /// <summary>
+        /// The current result level, where 0 is the first level in the hierarchy associated to an actual result.
+        /// This may be different from <see cref="XMLLevel"/> in such cases where the caller chose to ignore the root node, 
+        /// and also whether or not the caller provided an owner for the root node.
+        /// </summary>
+        int LogicalLevel { get; }
         object? CurrentInstance { get; }
 
         /// <summary>
@@ -46,6 +55,7 @@ namespace MapXML
         /// <param name="level"></param>
         /// <returns></returns>
         object? GetParent(int level = 1);
+        IXMLOptions Options { get; }
     }
 
     /// <summary>

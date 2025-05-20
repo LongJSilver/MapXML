@@ -2,7 +2,6 @@
 using MapXML.Utils;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
@@ -40,12 +39,15 @@ namespace MapXML.Behaviors
 
         internal override IEnumerable<object> GetChildrenToSerialize(IXMLInternalContext context, string NodeName)
         {
-            return new object[] { ObtainValueForLookup(context) };
+            object? val = ObtainValueForLookup(context);
+            if (val == null) return Enumerable.Empty<object>();
+            return new object[] { val };
         }
 
         private string? ObtainAttributeValue(IXMLInternalContext context)
         {
-            object value = Member.GetValue(context.GetCurrentInstance());
+            object? value = Member.GetValue(context.GetCurrentInstance());
+            if (value == null) return null;
             string sValue = ConvertBack(context, value);
 
 
@@ -60,7 +62,6 @@ namespace MapXML.Behaviors
                 else if (serOpt.AttributeOmissionPolicy == AttributeOmissionPolicy.AlwaysWhenNull)
                 {
                     if (XMLOmitWhenNullAttribute.ShouldOmitRule(this.NodeName, value, sValue, _typeToCreate)) return null;
-
                 }
             }
 
@@ -74,7 +75,7 @@ namespace MapXML.Behaviors
             return sValue;
         }
 
-        internal override object ObtainValueForLookup(IXMLInternalContext context)
+        internal override object? ObtainValueForLookup(IXMLInternalContext context)
         {
             return Member.GetValue(context.GetCurrentInstance());
         }

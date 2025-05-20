@@ -29,9 +29,22 @@ namespace MapXML
         /// </summary>
         public static IDeserializationOptions DefaultOptions_IgnoreRootNode { get; } = OptionsBuilder().IgnoreRootNode(true).Build();
 
-        public static IDeserializationOptionsBuilder OptionsBuilder() => new DefaultOptions();
+        public static IDeserializationOptionsBuilder OptionsBuilder(IXMLOptions? copyFrom = null) => new DefaultOptions(copyFrom);
         private sealed class DefaultOptions : AbstractOptionsBuilder<IDeserializationOptionsBuilder>, IDeserializationOptions, IDeserializationOptionsBuilder
         {
+            public DefaultOptions(IXMLOptions? CopyFrom = null) : base(CopyFrom)
+            {
+                if (CopyFrom is IDeserializationOptions so)
+                {
+                    this.IgnoreRootNode = so.IgnoreRootNode;
+                }
+            }
+
+            /// <summary>
+            /// Whether to skip the root node of the XML document.
+            /// <para/> DEFAULT: false
+            /// </summary>
+
 #pragma warning disable CA1805 // It should be extra clear what the default value is
             public bool IgnoreRootNode { get; private set; } = false;
 #pragma warning restore CA1805
@@ -68,7 +81,7 @@ namespace MapXML
             : this(source, Handler, RootNodeOwner: null, Options)
         { }
         public XMLDeserializer(Stream source, IXMLSerializationHandler? Handler, object? RootNodeOwner = null, IDeserializationOptions? Options = null)
-            : base(Options ?? new DefaultOptions())
+            : base(Options ?? new DefaultOptions(), Handler)
         {
             _firstNodeOwner = RootNodeOwner;
             Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, null, null, false));
@@ -83,7 +96,6 @@ namespace MapXML
         {
             object? currentObject = null;
 
-            IXMLSerializationHandler? newHandler = null; //No mechanism right now to introduce a new handler
             bool shouldAbsorbAttributes = false;
             Type? targetType = null;
             DeserializationPolicy nodePolicy = DeserializationPolicy.Create;
@@ -91,7 +103,7 @@ namespace MapXML
             if (CurrentLevel == 0)
             {
                 /**  
-                * we are at the root node, and we must deal with 4 possible corner cases:
+                * we are entering the root node, and we must deal with 4 possible corner cases:
                 * 1 - we where told to IGNORE the root node, and we were given NO owner for it 
                 * 2 - we where told to IGNORE the root node, but we were given an OWNER for it 
                 * 3 - we where NOT told to ignore the root node, but we were given an OWNER for it 
@@ -102,9 +114,9 @@ namespace MapXML
                 {
                     // we where told to IGNORE the root node, and we were given NO owner for it,
                     // so we just push the name to the stack and return
-                    Push(nodeName);
+                    LogicalLevelOffset = -1; // the root node will not yield any results
+                    Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, nodeName, _firstNodeOwner, false));
                     return;
-
                 }
                 else if (this.Options.IgnoreRootNode && _firstNodeOwner != null)
                 {
@@ -113,21 +125,25 @@ namespace MapXML
                     currentObject = _firstNodeOwner;
                     shouldAbsorbAttributes = false;
                     targetType = _firstNodeOwner.GetType();
+                    LogicalLevelOffset = 0; // the root node will be associated to the item given to us by the caller 
                 }
                 else if (!this.Options.IgnoreRootNode && _firstNodeOwner != null)
                 {
-                    // we where NOT told to ignore the root node, but we were given an OWNER for it
+                    // we where NOT told to ignore the root node, and we were given an OWNER for it
                     // so we skip the creation phase, we use the given object as CurrentInstance and go
                     // ahead with the attribute absorption phase
-                    currentObject = _firstNodeOwner;
                     shouldAbsorbAttributes = true;
-                    targetType = _firstNodeOwner.GetType();
+                    currentObject = _firstNodeOwner;
+                    targetType = currentObject.GetType();
+                    LogicalLevelOffset = 0; // the root node will be associated to the item given to us by the caller 
                 }
                 else
                 {
                     // we where NOT told to ignore the root node, and we were given NO owner for it,
                     // so we go ahead and treat this like any other node
+                    LogicalLevelOffset = 0; // the root node will be associated to whatever item we deserialize first
                 }
+
             }
 
             if (currentObject == null)
@@ -154,7 +170,7 @@ namespace MapXML
                 shouldAbsorbAttributes = nodePolicy == DeserializationPolicy.Create;
                 if (nodePolicy == DeserializationPolicy.Create)
                 {
-                    if (currentObject == null && !(ContextStack.Handler?.OverrideCreation(ContextStack, targetType, out currentObject) ?? false)
+                    if (!(ContextStack.Handler?.OverrideCreation(ContextStack, targetType, out currentObject) ?? false)
                         )
                     {
                         if (targetType.Equals(typeof(string)))
@@ -197,7 +213,7 @@ namespace MapXML
                 }
             }
 
-            Push(XMLNodeBehaviorProfile.CreateDeserializationNode(newHandler, this.Options,
+            Push(XMLNodeBehaviorProfile.CreateDeserializationNode(this.Handler, this.Options,
                 nodePolicy == DeserializationPolicy.Create, nodeName, targetType!, attributes, currentObject));
 
             if (shouldAbsorbAttributes && ContextStack.CanProcessAttributes)
