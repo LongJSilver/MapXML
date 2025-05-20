@@ -25,7 +25,7 @@ namespace MapXML
 
         public int ResultCount => AllResults.Count;
         public IReadOnlyList<object> Results => AllResults.Select(r => r.result).ToList();
-        public IReadOnlyList<object> TopLevelResults => AllResults.Where(r => r.level == 1).Select(r => r.result).ToList();
+        public IReadOnlyList<object> TopLevelResults => AllResults.Where(r => r.level == 0).Select(r => r.result).ToList();
 
 
         /// <summary>
@@ -82,8 +82,8 @@ namespace MapXML
         {
             if (QuickAssociations.ContainsKey(nodeName))
             {
-                AllResults.Add((state.Level, result));
-                ResultsByNode.Add(nodeName, (state.Level, result));
+                AllResults.Add((state.LogicalLevel, result));
+                ResultsByNode.Add(nodeName, (state.LogicalLevel, result));
             }
         }
 

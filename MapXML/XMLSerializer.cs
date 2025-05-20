@@ -166,7 +166,6 @@ namespace MapXML
         }
 
 
-        IXMLSerializationHandler? _handler;
         private readonly StringBuilder _sb = new StringBuilder();
         public Stream ResultStream => new MemoryStream(this.Options.Encoding.GetBytes(_sb.ToString()), false);
 
@@ -182,9 +181,8 @@ namespace MapXML
         { }
 
         public XMLSerializer(IXMLSerializationHandler? handler, ISerializationOptions? options = null)
-            : base(options ?? new DefaultOptions())
+            : base(options ?? new DefaultOptions(), handler)
         {
-            this._handler = handler;
         }
 
         public void AddItem(string NodeName, object item, int order = 0, string? formatName = null)
@@ -223,7 +221,7 @@ namespace MapXML
                 using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, enc))
                 using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = enc }))
                 {
-                    Push(XMLNodeBehaviorProfile.CreateTopNode(_handler, this.Options, Options.AdditionalRootNode, null, true));
+                    Push(XMLNodeBehaviorProfile.CreateTopNode(this.Handler, this.Options, Options.AdditionalRootNode, null, true));
 
                     ContextStack!.Culture = cult;
 

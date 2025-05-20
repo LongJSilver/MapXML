@@ -50,7 +50,7 @@ namespace MapXML.Tests
             BaseTestHandler dh, IDeserializationOptions OriginalDeserializationOptions) where T : IEquatable<T>
         {
             IList<(string nodeName, T firstLevelItem, Type t)> FirstLevelItems =
-                dh.GetResultInfo(1).Where(item => item.Result is T)
+                dh.GetResultInfo(0).Where(item => item.Result is T)
                 .Select(info => (info.NodeName, (T)info.Result, info.RegisteredType)).ToList();
 
             dh.ClearResults();
@@ -81,7 +81,7 @@ namespace MapXML.Tests
 
             xdes.Run();
 
-            var deserializedItems = dh.GetResults<T>(1);
+            var deserializedItems = dh.GetResults<T>(0);
             return Compare(FirstLevelItems.Select(i => i.firstLevelItem), deserializedItems);
 
         }
