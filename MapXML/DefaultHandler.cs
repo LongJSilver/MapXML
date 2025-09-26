@@ -94,19 +94,17 @@ namespace MapXML
             return false;
         }
 
-        public virtual bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
-           [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result)
+        public virtual bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out ElementMappingInfo info)
         {
+            info = default;
             if (QuickAssociations.TryGetValue(nodeName, out var data))
             {
-                policy = data.policy;
-                result = data.targetType;
+                info.Policy = data.policy;
+                info.TargetType = data.targetType;
                 return true;
             }
             else
             {
-                policy = DeserializationPolicy.Create;
-                result = null;
                 return false;
             }
         }

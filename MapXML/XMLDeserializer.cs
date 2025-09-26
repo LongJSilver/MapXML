@@ -97,8 +97,7 @@ namespace MapXML
             object? currentObject = null;
 
             bool shouldAbsorbAttributes = false;
-            Type? targetType = null;
-            DeserializationPolicy nodePolicy = DeserializationPolicy.Create;
+            ElementMappingInfo info = default;
 
             if (CurrentLevel == 0)
             {
@@ -124,7 +123,7 @@ namespace MapXML
                     // So we push a Behavior with the owner as current instance and skip the attribute absorption
                     currentObject = _firstNodeOwner;
                     shouldAbsorbAttributes = false;
-                    targetType = _firstNodeOwner.GetType();
+                    info.TargetType = _firstNodeOwner.GetType();
                     LogicalLevelOffset = 0; // the root node will be associated to the item given to us by the caller 
                 }
                 else if (!this.Options.IgnoreRootNode && _firstNodeOwner != null)
@@ -134,7 +133,7 @@ namespace MapXML
                     // ahead with the attribute absorption phase
                     shouldAbsorbAttributes = true;
                     currentObject = _firstNodeOwner;
-                    targetType = currentObject.GetType();
+                    info.TargetType = currentObject.GetType();
                     LogicalLevelOffset = 0; // the root node will be associated to the item given to us by the caller 
                 }
                 else
@@ -157,7 +156,7 @@ namespace MapXML
                     return;
 #endif
                 }
-                if (!ContextStack.InfoForNode(nodeName, attributes, out nodePolicy, out targetType))
+                if (!ContextStack.InfoForNode(nodeName, attributes, out info))
                 {
                     Throw($"No context was found for element <{nodeName}>");
 #if NETSTANDARD2_0
@@ -167,36 +166,44 @@ namespace MapXML
 #endif
 
                 }
-                shouldAbsorbAttributes = nodePolicy == DeserializationPolicy.Create;
-                if (nodePolicy == DeserializationPolicy.Create)
+                shouldAbsorbAttributes = info.Policy == DeserializationPolicy.Create;
+
+                if (info.Policy == DeserializationPolicy.Create)
                 {
-                    if (!(ContextStack.Handler?.OverrideCreation(ContextStack, targetType, out currentObject) ?? false)
-                        )
+                    //try finding an existing instance if we are allowed to
+                    if (!info.AggregateMultipleDefinitions 
+                        || 
+                        !ContextStack.Lookup_FromAttributes(nodeName, attributes, info.TargetType!, out currentObject))
                     {
-                        if (targetType.Equals(typeof(string)))
+                        //no existing instance was found, so we create a new one
+                        if (!(ContextStack.Handler?.OverrideCreation(ContextStack, info.TargetType!, out currentObject) ?? false)
+                            )
                         {
-                            currentObject = string.Empty;
-                        }
-                        else
-                        {
-                            //----------------- creazione  ----//
-                            ConstructorInfo c = targetType.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
-                            if (c != null)
+                            if (info.TargetType!.Equals(typeof(string)))
                             {
-                                currentObject = c.Invoke(Array.Empty<object>());
+                                currentObject = string.Empty;
                             }
                             else
-                                currentObject = FormatterServices.GetUninitializedObject(targetType);
+                            {
+                                //----------------- creazione  ----//
+                                ConstructorInfo c = info.TargetType.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+                                if (c != null)
+                                {
+                                    currentObject = c.Invoke(Array.Empty<object>());
+                                }
+                                else
+                                    currentObject = FormatterServices.GetUninitializedObject(info.TargetType);
+                            }
+                            //-----------------           ----//
                         }
-                        //-----------------           ----//
+                        ContextStack.InjectDependencies(currentObject);
                     }
-                    ContextStack.InjectDependencies(currentObject);
                 }
                 else
                 {
                     try
                     {
-                        if (!ContextStack.Lookup_FromAttributes(nodeName, attributes, targetType, out currentObject))
+                        if (!ContextStack.Lookup_FromAttributes(nodeName, attributes, info.TargetType, out currentObject))
                             currentObject = new PlaceHolderForLateLookup();
                     }
                     catch (Exception e)
@@ -214,7 +221,7 @@ namespace MapXML
             }
 
             Push(XMLNodeBehaviorProfile.CreateDeserializationNode(this.Handler, this.Options,
-                nodePolicy == DeserializationPolicy.Create, nodeName, targetType!, attributes, currentObject));
+                info.Policy == DeserializationPolicy.Create, nodeName, info.TargetType!, attributes, currentObject));
 
             if (shouldAbsorbAttributes && ContextStack.CanProcessAttributes)
             {
@@ -222,14 +229,13 @@ namespace MapXML
                 {
                     string AttributeName = item.Key;
                     string AttributeValue = item.Value;
-                    if (ContextStack.InfoForAttribute(nodeName, AttributeName, out var attPolicy, out var attTargetType))
+                    if (ContextStack.InfoForAttribute(nodeName, AttributeName, out var attInfo))
                     {
-
-                        if (attPolicy == DeserializationPolicy.Create)
+                        if (attInfo.Policy == DeserializationPolicy.Create)
                             ContextStack.ProcessAttribute(nodeName, AttributeName, AttributeValue);
-                        else if (attPolicy == DeserializationPolicy.Lookup)
+                        else if (attInfo.Policy == DeserializationPolicy.Lookup)
                         {
-                            if (ContextStack.Lookup_FromAttribute(nodeName, AttributeName, AttributeValue, attTargetType, out object? lookedUpValue))
+                            if (ContextStack.Lookup_FromAttribute(nodeName, AttributeName, AttributeValue, attInfo.TargetType!, out object? lookedUpValue))
                                 ContextStack.ProcessValue(nodeName, AttributeName, lookedUpValue);
                             else
                             {
@@ -242,7 +248,7 @@ namespace MapXML
                             }
                         }
                         else
-                            throw new NotSupportedException($"Unknown {nameof(DeserializationPolicy)} : <{attPolicy}>");
+                            throw new NotSupportedException($"Unknown {nameof(DeserializationPolicy)} : <{attInfo.Policy}>");
                     }
                 }
             }

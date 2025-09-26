@@ -437,16 +437,18 @@ namespace MapXML.Behaviors
         {
             Handler?.InjectDependencies(this, newObject);
         }
-        internal bool InfoForNode(string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
-            [MaybeNullWhen(false)][NotNullWhen(true)] out Type? resultType)
+       
+        internal bool InfoForNode(
+                                    string nodeName,
+                                    IReadOnlyDictionary<string, string> attributes,
+                                    out ElementMappingInfo info
+            )
         {
-            resultType = default;
-            policy = default;
+            info = default;
 
             if (_staticClassData != null && _staticClassData._childBehaviors_forDes.TryGetValue(nodeName, out var beh))
             {
-                resultType = beh.TypeToCreate;
-                policy = beh.Policy;
+                info = new ElementMappingInfo(beh.Policy, beh.TypeToCreate, beh.AggregateMultipleDefinitions);
                 return true;
             }
 
@@ -455,21 +457,20 @@ namespace MapXML.Behaviors
              su un nodo che abbiamo incontrato noi. Se questa informazione non è nei nostri staticClassData la chiediamo
              all'handler come ultima spiaggia e basta.
              */
-            if (Handler?.InfoForNode(this, nodeName, attributes, out policy, out resultType) ?? false)
+            if (Handler?.InfoForNode(this, nodeName, attributes, out info) ?? false)
                 return true;
 
             return false;
         }
 
-        internal bool InfoForAttribute(string nodeName, string attributeName, out DeserializationPolicy policy, [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result)
+        internal bool InfoForAttribute(string nodeName, string attributeName, out ElementMappingInfo info)
         {
-            result = default;
-            policy = default;
+            info = default;
 
             if (_staticClassData != null && _staticClassData._attributeBehaviors_forDes.TryGetValue(attributeName, out var beh))
             {
-                result = beh.TypeToCreate;
-                policy = beh.Policy;
+                info.TargetType = beh.TypeToCreate;
+                info.Policy = beh.Policy;
                 return true;
             }
             return false;

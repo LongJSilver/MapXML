@@ -128,6 +128,11 @@ namespace MapXML.Behaviors
         {
             throw new NotSupportedException();
         }
+
+        internal override bool AttributeAlreadyHasValue(IXMLInternalContext context)
+        {
+            throw new NotSupportedException();
+        }
         /// <summary>
         /// This method is responsible for processing an XML attribute, extracting its value, determining the corresponding key for the dictionary,
         /// and injecting the key-value pair into the dictionary.
@@ -155,9 +160,24 @@ namespace MapXML.Behaviors
                 default:
                     throw new NotImplementedException($"{nameof(KeySourceTypes)} value '{XMLMapAttribute.KeySourceType}' is not recognized");
             }
-            Inject(context, Key, value);
+            if (AggregateMultipleDefinitions || !HasValue(context, Key))
+                Inject(context, Key, value);
         }
 
+        private bool HasValue(IXMLInternalContext context, object Key)
+        {
+            if (Key is String && _keyType != typeof(string))
+            {
+                Key = _KeyConversion((string)Key, context.FormatProvider);
+            }
+
+            object? dict = this.Member.GetValue(context.GetCurrentInstance());
+            if (dict == null)
+                throw new InvalidOperationException("Target dictionary is null");
+            var _ContainsKeyMethod = dict.GetType().GetMethod("ContainsKey");
+
+            return (bool) _ContainsKeyMethod.Invoke(dict, new object[] { Key});
+        }
         private void Inject(IXMLInternalContext context, object Key, object Value)
         {
             if (Key is String && _keyType != typeof(string))
@@ -165,7 +185,7 @@ namespace MapXML.Behaviors
                 Key = _KeyConversion((string)Key, context.FormatProvider);
             }
 
-            object dict = this.Member.GetValue(context.GetCurrentInstance());
+            object? dict = this.Member.GetValue(context.GetCurrentInstance());
             if (dict == null)
                 throw new InvalidOperationException("Target dictionary is null");
             var _addMethod = dict.GetType().GetMethod("Add");
