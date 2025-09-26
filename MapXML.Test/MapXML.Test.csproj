@@ -29,6 +29,7 @@
     <EmbeddedResource Include="DataFiles\RootNodeCornerCases_ExtraRoot.xml" />
     <EmbeddedResource Include="DataFiles\RootNodeCornerCases.xml" />
     <EmbeddedResource Include="DataFiles\SimpleValues.xml" />
+    <EmbeddedResource Include="DataFiles\AggregateMultipleDefinitions.xml" />
     <EmbeddedResource Include="DataFiles\XMLFunctions.xml" />
   </ItemGroup>
 
