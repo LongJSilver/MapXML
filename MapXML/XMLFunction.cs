@@ -170,16 +170,63 @@ namespace MapXML
 
         public IReadOnlyDictionary<string, string> GetLookupAttributes(IXMLInternalContext context, string TargetNodeName, object item)
         {
-            XMLNodeBehaviorProfile profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.Options, TargetNodeName, item);
             var attNames = new HashSet<String>(_parameterMapping.Select(p => p.AttributeName), StringComparer.InvariantCultureIgnoreCase);
-            return profile.GetAttributesToSerialize(attNames.Contains);
+
+            XMLNodeBehaviorProfile profile;
+
+            profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.Options, TargetNodeName, item);
+            Dictionary<string, string> atts_firstAttempt = profile.GetAttributesToSerialize(attNames.Contains);
+
+            if (atts_firstAttempt.Count < attNames.Count && !context.Options.AllowImplicitFields)
+            {
+                //attempt again, but with implicit fields; this could have unforeseen effects, so in case of exception we just return the first attempt
+                //and hope the requesting function can deal with missing attributes
+                try
+                {
+                    var newOptions = XMLSerializer.OptionsBuilder(context.Options).AllowImplicitFields(true)
+                        .Build();
+                    profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, newOptions, TargetNodeName, item);
+                    Dictionary<string, string> atts_secondAttempt = profile.GetAttributesToSerialize(attNames.Contains);
+                    return atts_secondAttempt;
+                }
+                catch (Exception)
+                {
+                }
+            }
+            return atts_firstAttempt;
+
         }
+
         public (String attName, String AttValue) GetLookupAttribute(IXMLInternalContext context, string TargetNodeName, object item)
         {
+
             XMLNodeBehaviorProfile profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, context.Options, TargetNodeName, item);
             var attNames = new HashSet<String>(_parameterMapping.Select(p => p.AttributeName));
-            var result = profile.GetAttributesToSerialize(attNames.Contains).First();
-            return (result.Key, result.Value);
+            var result = profile.GetAttributesToSerialize(attNames.Contains);
+            if(result.Count == 0 && !context.Options.AllowImplicitFields)
+            {
+                //attempt again, but with implicit fields; this could have unforeseen effects, so in case of exception we just return the first attempt
+                //and hope the requesting function can deal with missing attributes
+                try
+                {
+                    var newOptions = XMLSerializer.OptionsBuilder(context.Options).AllowImplicitFields(true)
+                        .Build();
+                    profile = XMLNodeBehaviorProfile.GetDummyForLookupAttributes(context.Handler, newOptions, TargetNodeName, item);
+                    result = profile.GetAttributesToSerialize(attNames.Contains);
+                }
+                catch (Exception)
+                {
+                    
+                }
+            }
+            if (result.Count == 0)
+            {
+                throw new InvalidOperationException("Unable to determine any attribute for lookup.");
+            }else
+            {
+                var attribute = result.First();
+                return (attribute.Key, attribute.Value);
+            }
         }
 
         public object InvokeWithAttribute(IXMLInternalContext context, object functionInstance, string AttributeName, string AttributeValue)

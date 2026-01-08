@@ -24,8 +24,8 @@ namespace MapXML.Behaviors
         /****** STATIC ******/
         private XMLStaticClassData? _staticClassData;
 
-        private static Dictionary<Type, XMLStaticClassData> __typeCache =
-                   new Dictionary<Type, XMLStaticClassData>();
+        private static Dictionary<(Type, bool AllowImplicitFields), XMLStaticClassData> __typeCache =
+                   new Dictionary<(Type, bool AllowImplicitFields), XMLStaticClassData>();
 
         public XMLStaticClassData? StaticClassData => _staticClassData;
         public IXMLSerializationHandler? Handler => _handler;
@@ -223,7 +223,7 @@ namespace MapXML.Behaviors
         private void FindStaticData(bool allowImplicitFields)
         {
             Type t = this.GetCurrentInstance().GetType();
-            if (!__typeCache.TryGetValue(t, out var data))
+            if (!__typeCache.TryGetValue((t, allowImplicitFields), out var data))
             {
                 List<XMLMemberBehavior> _behaviors = new List<XMLMemberBehavior>();
                 List<XMLFunction> _functions = new List<XMLFunction>();
@@ -281,7 +281,7 @@ namespace MapXML.Behaviors
                     beh.Init();
                     _behaviors.Add(beh);
                 }
-                __typeCache[t] = data = new XMLStaticClassData(t, _behaviors, _functions);
+                __typeCache[(t, allowImplicitFields)] = data = new XMLStaticClassData(t, _behaviors, _functions);
             }
             _staticClassData = data;
         }
