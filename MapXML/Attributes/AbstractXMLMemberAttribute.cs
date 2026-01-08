@@ -3,6 +3,15 @@
 namespace MapXML.Attributes
 {
 #pragma warning disable CA1051 // Make an exception for fields in attribute subclasses
+    [Flags]
+    public enum AggregationPolicy
+    {
+        NoAggregation = 0,
+        AggregateAttributes = 1,
+        AggregateChildren = 2,
+        AggregateTextContent = 4,
+        AggregateAll = AggregateAttributes | AggregateTextContent | AggregateChildren
+    }
     public abstract class AbstractXMLMemberAttribute : Attribute
     {
         public readonly string NodeName;
@@ -33,8 +42,8 @@ namespace MapXML.Attributes
         /// Finally, the looked-up entity will pass through the 
         /// same finalization process as any other entity created during deserialization, so it will show up multiple times in whatever 
         /// downstream mechanism is used to collect results.<para/>
-        ///     </summary>
-        public bool AggregateMultipleDefinitions { get; set; } = false;
+        /// </summary>
+        public AggregationPolicy AggregateMultipleDefinitions { get; set; } = AggregationPolicy.NoAggregation;
         internal AbstractXMLMemberAttribute(string xmlAttributeName,
                                     XMLSourceType sourceType = XMLSourceType.Attribute,
                                     DeserializationPolicy type = DeserializationPolicy.Create)

@@ -38,6 +38,9 @@ namespace MapXML.Behaviors
         /****** Identity ******/
         private readonly IXMLSerializationHandler? _handler;
         internal bool IsCreation { get; private set; }
+        internal AggregationPolicy AggregationPolicy { get; private set; }
+        internal bool IsAggregation => IsCreation && AggregationPolicy != AggregationPolicy.NoAggregation;
+
         internal CultureInfo? Culture { get; set; }
         IFormatProvider? IXMLInternalContext.FormatProvider => GetFormat();
         public int XMLLevel { get; internal set; }
@@ -110,13 +113,15 @@ namespace MapXML.Behaviors
         }
 
 
-        internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler, IXMLOptions options, bool creation,
+        internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler,
+            IXMLOptions options, bool creation, AggregationPolicy aggregation,
             string nodeName, Type targetType, Dictionary<string, string> attributes, object owner)
         {
 
             return new XMLNodeBehaviorProfile(handler, options, nodeName, attributes, owner, targetType, false)
             {
-                IsCreation = creation
+                IsCreation = creation,
+                AggregationPolicy = aggregation
             };
         }
         internal string? GetTextContentToSerialize()
@@ -437,7 +442,7 @@ namespace MapXML.Behaviors
         {
             Handler?.InjectDependencies(this, newObject);
         }
-       
+
         internal bool InfoForNode(
                                     string nodeName,
                                     IReadOnlyDictionary<string, string> attributes,
@@ -448,7 +453,7 @@ namespace MapXML.Behaviors
 
             if (_staticClassData != null && _staticClassData._childBehaviors_forDes.TryGetValue(nodeName, out var beh))
             {
-                info = new ElementMappingInfo(beh.Policy, beh.TypeToCreate, beh.AggregateMultipleDefinitions);
+                info = new ElementMappingInfo(beh.Policy, beh.TypeToCreate, beh.AggregationPolicy);
                 return true;
             }
 
@@ -762,6 +767,12 @@ namespace MapXML.Behaviors
 
         private bool ProcessTextContent(String value)
         {
+            if (IsAggregation && !AggregationPolicy.HasFlag(AggregationPolicy.AggregateTextContent))
+            {
+                //ignore text content in aggregations unless explicitly allowed
+                return false;
+            }
+
             if (this.IsNamedTextContentNode)
             {
                 if (TargetType!.Equals(typeof(string)))

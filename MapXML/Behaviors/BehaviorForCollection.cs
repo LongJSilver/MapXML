@@ -57,11 +57,5 @@ namespace MapXML.Behaviors
         {
             throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
-
-
-        internal override bool AttributeAlreadyHasValue(IXMLInternalContext context)
-        {
-            throw new InvalidOperationException($"A collection cannot be deserialized as attribute.");
-        }
     }
 }

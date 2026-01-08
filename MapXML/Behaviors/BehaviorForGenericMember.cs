@@ -83,12 +83,7 @@ namespace MapXML.Behaviors
         internal override string? GetTextContentToSerialize(IXMLInternalContext context)
          => ObtainAttributeValue(context);
 
-        internal override bool AttributeAlreadyHasValue(IXMLInternalContext context)
-        {
-            object? value = Member.GetValue(context.GetCurrentInstance());
-            return value != null;
-        }
-
+    
         private readonly List<ShouldOmitDelegate> _serializationFilters;
     }
 }

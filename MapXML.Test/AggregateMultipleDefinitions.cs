@@ -74,7 +74,7 @@ namespace MapXML.Tests
             public IEnumerable<Prop> Properties => _props;
             [XMLNonSerialized]
             public IEnumerable<Cls> Classes => _cls;
-            [XMLChild("Cls", AggregateMultipleDefinitions = true)]
+            [XMLChild("Cls", AggregateMultipleDefinitions = AggregationPolicy.AggregateChildren)]
             public void AddClass(Cls c)
             {
                 if (!_cls.Contains(c))

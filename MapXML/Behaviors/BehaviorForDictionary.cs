@@ -129,10 +129,6 @@ namespace MapXML.Behaviors
             throw new NotSupportedException();
         }
 
-        internal override bool AttributeAlreadyHasValue(IXMLInternalContext context)
-        {
-            throw new NotSupportedException();
-        }
         /// <summary>
         /// This method is responsible for processing an XML attribute, extracting its value, determining the corresponding key for the dictionary,
         /// and injecting the key-value pair into the dictionary.
@@ -160,8 +156,7 @@ namespace MapXML.Behaviors
                 default:
                     throw new NotImplementedException($"{nameof(KeySourceTypes)} value '{XMLMapAttribute.KeySourceType}' is not recognized");
             }
-            if (AggregateMultipleDefinitions || !HasValue(context, Key))
-                Inject(context, Key, value);
+            Inject(context, Key, value);
         }
 
         private bool HasValue(IXMLInternalContext context, object Key)
@@ -176,7 +171,7 @@ namespace MapXML.Behaviors
                 throw new InvalidOperationException("Target dictionary is null");
             var _ContainsKeyMethod = dict.GetType().GetMethod("ContainsKey");
 
-            return (bool) _ContainsKeyMethod.Invoke(dict, new object[] { Key});
+            return (bool)_ContainsKeyMethod.Invoke(dict, new object[] { Key });
         }
         private void Inject(IXMLInternalContext context, object Key, object Value)
         {

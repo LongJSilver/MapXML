@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MapXML.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -124,9 +125,9 @@ namespace MapXML
     {
         public DeserializationPolicy Policy { get; internal set; }
         public Type? TargetType { get; internal set; }
-        public bool AggregateMultipleDefinitions { get; internal set; }
+        public AggregationPolicy AggregateMultipleDefinitions { get; internal set; }
 
-        public ElementMappingInfo(DeserializationPolicy policy, Type? typeToCreate, bool aggregateMultipleDefinitions = false)
+        public ElementMappingInfo(DeserializationPolicy policy, Type? typeToCreate, AggregationPolicy aggregateMultipleDefinitions = AggregationPolicy.NoAggregation)
         {
             this.Policy = policy;
             this.TargetType = typeToCreate;
