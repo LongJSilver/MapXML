@@ -38,6 +38,9 @@ namespace MapXML.Behaviors
         /****** Identity ******/
         private readonly IXMLSerializationHandler? _handler;
         internal bool IsCreation { get; private set; }
+        internal AggregationPolicy AggregationPolicy { get; private set; }
+        internal bool IsAggregation => IsCreation && AggregationPolicy != AggregationPolicy.NoAggregation;
+
         internal CultureInfo? Culture { get; set; }
         IFormatProvider? IXMLInternalContext.FormatProvider => GetFormat();
         public int XMLLevel { get; internal set; }
@@ -110,13 +113,15 @@ namespace MapXML.Behaviors
         }
 
 
-        internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler, IXMLOptions options, bool creation,
+        internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler,
+            IXMLOptions options, bool creation, AggregationPolicy aggregation,
             string nodeName, Type targetType, Dictionary<string, string> attributes, object owner)
         {
 
             return new XMLNodeBehaviorProfile(handler, options, nodeName, attributes, owner, targetType, false)
             {
-                IsCreation = creation
+                IsCreation = creation,
+                AggregationPolicy = aggregation
             };
         }
         internal string? GetTextContentToSerialize()
@@ -437,16 +442,18 @@ namespace MapXML.Behaviors
         {
             Handler?.InjectDependencies(this, newObject);
         }
-        internal bool InfoForNode(string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy,
-            [MaybeNullWhen(false)][NotNullWhen(true)] out Type? resultType)
+
+        internal bool InfoForNode(
+                                    string nodeName,
+                                    IReadOnlyDictionary<string, string> attributes,
+                                    out ElementMappingInfo info
+            )
         {
-            resultType = default;
-            policy = default;
+            info = default;
 
             if (_staticClassData != null && _staticClassData._childBehaviors_forDes.TryGetValue(nodeName, out var beh))
             {
-                resultType = beh.TypeToCreate;
-                policy = beh.Policy;
+                info = new ElementMappingInfo(beh.Policy, beh.TypeToCreate, beh.AggregationPolicy);
                 return true;
             }
 
@@ -455,21 +462,20 @@ namespace MapXML.Behaviors
              su un nodo che abbiamo incontrato noi. Se questa informazione non è nei nostri staticClassData la chiediamo
              all'handler come ultima spiaggia e basta.
              */
-            if (Handler?.InfoForNode(this, nodeName, attributes, out policy, out resultType) ?? false)
+            if (Handler?.InfoForNode(this, nodeName, attributes, out info) ?? false)
                 return true;
 
             return false;
         }
 
-        internal bool InfoForAttribute(string nodeName, string attributeName, out DeserializationPolicy policy, [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result)
+        internal bool InfoForAttribute(string nodeName, string attributeName, out ElementMappingInfo info)
         {
-            result = default;
-            policy = default;
+            info = default;
 
             if (_staticClassData != null && _staticClassData._attributeBehaviors_forDes.TryGetValue(attributeName, out var beh))
             {
-                result = beh.TypeToCreate;
-                policy = beh.Policy;
+                info.TargetType = beh.TypeToCreate;
+                info.Policy = beh.Policy;
                 return true;
             }
             return false;
@@ -761,6 +767,12 @@ namespace MapXML.Behaviors
 
         private bool ProcessTextContent(String value)
         {
+            if (IsAggregation && !AggregationPolicy.HasFlag(AggregationPolicy.AggregateTextContent))
+            {
+                //ignore text content in aggregations unless explicitly allowed
+                return false;
+            }
+
             if (this.IsNamedTextContentNode)
             {
                 if (TargetType!.Equals(typeof(string)))

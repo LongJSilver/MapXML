@@ -30,8 +30,11 @@ namespace MapXML.Behaviors
         public readonly MemberInfo Member;
         public bool CanSerialize => (CanSerializeAsAttribute || CanSerializeAsChild || CanSerializeAsTextContent);
         public bool CanDeserialize => _canDeserialize;
+        public AggregationPolicy AggregationPolicy => _aggregate;
+
         private readonly bool _canSerialize;
         private readonly bool _canDeserialize;
+        private readonly AggregationPolicy _aggregate;
         internal bool CanSerializeAsAttribute => _canSerialize && InternalCanSerializeAsAttribute && SourceType.HasFlag(XMLSourceType.Attribute);
         internal bool CanSerializeAsTextContent => _canSerialize && InternalCanSerializeAsTextContent && SourceType.HasFlag(XMLSourceType.TextContent);
         internal bool CanSerializeAsChild => _canSerialize && InternalCanSerializeAsChild && SourceType.HasFlag(XMLSourceType.Child);
@@ -53,6 +56,7 @@ namespace MapXML.Behaviors
             this.SourceType = source;
             this.Policy = policy;
             _canDeserialize = _canSerialize = true;
+            _aggregate = AggregationPolicy.NoAggregation;
         }
 
         protected XMLMemberBehavior(MemberInfo member, AbstractXMLMemberAttribute? attribute)
@@ -63,6 +67,7 @@ namespace MapXML.Behaviors
             {
                 _canDeserialize = attribute.CanDeserialize;
                 _canSerialize = attribute.CanSerialize;
+                _aggregate = attribute.AggregateMultipleDefinitions;
             }
 
             this.SerializationOrder = attribute?.SerializationOrder ?? int.MaxValue;

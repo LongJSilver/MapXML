@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MapXML.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -120,9 +121,22 @@ namespace MapXML
         bool Lookup_FromAttribute(string nodeName, string attributeName, string attributeValue, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
     }
 
+    public struct ElementMappingInfo
+    {
+        public DeserializationPolicy Policy { get; internal set; }
+        public Type? TargetType { get; internal set; }
+        public AggregationPolicy AggregateMultipleDefinitions { get; internal set; }
+
+        public ElementMappingInfo(DeserializationPolicy policy, Type? typeToCreate, AggregationPolicy aggregateMultipleDefinitions = AggregationPolicy.NoAggregation)
+        {
+            this.Policy = policy;
+            this.TargetType = typeToCreate;
+            this.AggregateMultipleDefinitions = aggregateMultipleDefinitions;
+        }
+    }
     public interface IXMLSerializationHandler
     {
-        bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy, [MaybeNullWhen(false)][NotNullWhen(true)] out Type? result);
+        bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out ElementMappingInfo info);
         //***************************************************************************//
 
         //Domain: object creation and initiazation

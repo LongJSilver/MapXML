@@ -1,4 +1,5 @@
-﻿using MapXML.Behaviors;
+﻿using MapXML.Attributes;
+using MapXML.Behaviors;
 using MapXML.Utils;
 using System;
 using System.Collections.Generic;
@@ -91,14 +92,36 @@ namespace MapXML
             _reader.OnNodeStart += this.NodeStart;
             _reader.OnText += this.TextContent;
         }
-
+        /// <summary>
+        /// A level of -1 means business as usual.
+        /// NodeStart:
+        ///     - if level == 0 then we are at the first level children of a node that should ignore children,
+        ///        so we increment and skip
+        ///     - if level > 0 then we are down the hierarchy of a node that we should ignore,
+        ///        so we increment and skip
+        /// NodeEnd:
+        ///     - if level == 0 then we are closing a node whose children we have been ignoring,
+        ///         so we decrease and finalize as usual
+        ///     - if level > 0 then we are down the hierarchy of a node that we should ignore entirely,
+        ///         so we decrease and skip
+        /// TextContent:
+        ///     - if level == 0 then we are encountering the text content of a node which is ignoring children,
+        ///         we process text content as appropriate.        ///     
+        ///     - if level > 0 then we are down the hierarchy of a node that we should ignore entirely,
+        ///         so we skip
+        /// </summary>
+        private int _ignoreLevel = -1;
         void NodeStart(string nodeName, Dictionary<string, string> attributes)
         {
+            if (_ignoreLevel >= 0)
+            {
+                _ignoreLevel++;
+                return;
+            }
             object? currentObject = null;
 
             bool shouldAbsorbAttributes = false;
-            Type? targetType = null;
-            DeserializationPolicy nodePolicy = DeserializationPolicy.Create;
+            ElementMappingInfo info = default;
 
             if (CurrentLevel == 0)
             {
@@ -124,7 +147,7 @@ namespace MapXML
                     // So we push a Behavior with the owner as current instance and skip the attribute absorption
                     currentObject = _firstNodeOwner;
                     shouldAbsorbAttributes = false;
-                    targetType = _firstNodeOwner.GetType();
+                    info.TargetType = _firstNodeOwner.GetType();
                     LogicalLevelOffset = 0; // the root node will be associated to the item given to us by the caller 
                 }
                 else if (!this.Options.IgnoreRootNode && _firstNodeOwner != null)
@@ -134,7 +157,7 @@ namespace MapXML
                     // ahead with the attribute absorption phase
                     shouldAbsorbAttributes = true;
                     currentObject = _firstNodeOwner;
-                    targetType = currentObject.GetType();
+                    info.TargetType = currentObject.GetType();
                     LogicalLevelOffset = 0; // the root node will be associated to the item given to us by the caller 
                 }
                 else
@@ -145,6 +168,7 @@ namespace MapXML
                 }
 
             }
+            bool IsAggregation = false;
 
             if (currentObject == null)
             {
@@ -157,7 +181,7 @@ namespace MapXML
                     return;
 #endif
                 }
-                if (!ContextStack.InfoForNode(nodeName, attributes, out nodePolicy, out targetType))
+                if (!ContextStack.InfoForNode(nodeName, attributes, out info))
                 {
                     Throw($"No context was found for element <{nodeName}>");
 #if NETSTANDARD2_0
@@ -167,36 +191,54 @@ namespace MapXML
 #endif
 
                 }
-                shouldAbsorbAttributes = nodePolicy == DeserializationPolicy.Create;
-                if (nodePolicy == DeserializationPolicy.Create)
+                if (info.Policy == DeserializationPolicy.Create)
                 {
-                    if (!(ContextStack.Handler?.OverrideCreation(ContextStack, targetType, out currentObject) ?? false)
-                        )
+
+                    if (info.AggregateMultipleDefinitions != AggregationPolicy.NoAggregation)
                     {
-                        if (targetType.Equals(typeof(string)))
+                        if (ContextStack.Lookup_FromAttributes(nodeName, attributes, info.TargetType!, out currentObject)
+                            && currentObject != null)
                         {
-                            currentObject = string.Empty;
+
+                            IsAggregation = true;
+                            shouldAbsorbAttributes = info.AggregateMultipleDefinitions.HasFlag(AggregationPolicy.AggregateAttributes);
                         }
-                        else
+                    }
+
+                    //try finding an existing instance if we are allowed to
+                    if (!IsAggregation)
+                    {
+                        //no existing instance was found, so we create a new one
+                        if (!(ContextStack.Handler?.OverrideCreation(ContextStack, info.TargetType!, out currentObject) ?? false)
+                            )
                         {
-                            //----------------- creazione  ----//
-                            ConstructorInfo c = targetType.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
-                            if (c != null)
+                            if (info.TargetType!.Equals(typeof(string)))
                             {
-                                currentObject = c.Invoke(Array.Empty<object>());
+                                currentObject = string.Empty;
                             }
                             else
-                                currentObject = FormatterServices.GetUninitializedObject(targetType);
+                            {
+                                //----------------- creazione  ----//
+                                ConstructorInfo c = info.TargetType.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+                                if (c != null)
+                                {
+                                    currentObject = c.Invoke(Array.Empty<object>());
+                                }
+                                else
+                                    currentObject = FormatterServices.GetUninitializedObject(info.TargetType);
+                            }
+                            //-----------------           ----//
                         }
-                        //-----------------           ----//
+                        shouldAbsorbAttributes = true;
+                        ContextStack.InjectDependencies(currentObject);
                     }
-                    ContextStack.InjectDependencies(currentObject);
                 }
                 else
                 {
+                    shouldAbsorbAttributes = false;
                     try
                     {
-                        if (!ContextStack.Lookup_FromAttributes(nodeName, attributes, targetType, out currentObject))
+                        if (!ContextStack.Lookup_FromAttributes(nodeName, attributes, info.TargetType!, out currentObject))
                             currentObject = new PlaceHolderForLateLookup();
                     }
                     catch (Exception e)
@@ -214,7 +256,7 @@ namespace MapXML
             }
 
             Push(XMLNodeBehaviorProfile.CreateDeserializationNode(this.Handler, this.Options,
-                nodePolicy == DeserializationPolicy.Create, nodeName, targetType!, attributes, currentObject));
+                info.Policy == DeserializationPolicy.Create, IsAggregation ? info.AggregateMultipleDefinitions : AggregationPolicy.NoAggregation, nodeName, info.TargetType!, attributes, currentObject!));
 
             if (shouldAbsorbAttributes && ContextStack.CanProcessAttributes)
             {
@@ -222,14 +264,13 @@ namespace MapXML
                 {
                     string AttributeName = item.Key;
                     string AttributeValue = item.Value;
-                    if (ContextStack.InfoForAttribute(nodeName, AttributeName, out var attPolicy, out var attTargetType))
+                    if (ContextStack.InfoForAttribute(nodeName, AttributeName, out var attInfo))
                     {
-
-                        if (attPolicy == DeserializationPolicy.Create)
+                        if (attInfo.Policy == DeserializationPolicy.Create)
                             ContextStack.ProcessAttribute(nodeName, AttributeName, AttributeValue);
-                        else if (attPolicy == DeserializationPolicy.Lookup)
+                        else if (attInfo.Policy == DeserializationPolicy.Lookup)
                         {
-                            if (ContextStack.Lookup_FromAttribute(nodeName, AttributeName, AttributeValue, attTargetType, out object? lookedUpValue))
+                            if (ContextStack.Lookup_FromAttribute(nodeName, AttributeName, AttributeValue, attInfo.TargetType!, out object? lookedUpValue))
                                 ContextStack.ProcessValue(nodeName, AttributeName, lookedUpValue);
                             else
                             {
@@ -242,7 +283,7 @@ namespace MapXML
                             }
                         }
                         else
-                            throw new NotSupportedException($"Unknown {nameof(DeserializationPolicy)} : <{attPolicy}>");
+                            throw new NotSupportedException($"Unknown {nameof(DeserializationPolicy)} : <{attInfo.Policy}>");
                     }
                 }
             }
@@ -250,11 +291,29 @@ namespace MapXML
 
             if (attributes.TryGetValue(FormatProviderAttributeName, out var formatName))
                 ContextStack.Culture = CultureInfo.GetCultureInfo(formatName);
+
+
+            if (IsAggregation && !info.AggregateMultipleDefinitions.HasFlag(AggregationPolicy.AggregateChildren))
+            {
+                _ignoreLevel++;
+            }
         }
 
 
         void NodeEnd(string name)
         {
+            switch (_ignoreLevel)
+            {
+                case < 0:
+                    break; //business as usual
+                case 0:
+                    _ignoreLevel--;
+                    break;
+                case > 0:
+                    _ignoreLevel--;
+                    return;
+            }
+        
             //---------------------------------//
             try
             {
@@ -273,6 +332,8 @@ namespace MapXML
         }
         void TextContent(string text)
         {
+            if (_ignoreLevel > 0) return;
+
             try
             {
                 if (ContextStack.EncounteredTextContent)

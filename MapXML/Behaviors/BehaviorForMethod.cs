@@ -54,5 +54,6 @@ namespace MapXML.Behaviors
         protected override bool InternalCanSerializeAsAttribute => false;
         protected override bool InternalCanSerializeAsChild => false;
         protected override bool InternalCanSerializeAsTextContent => false;
+
     }
 }

@@ -55,6 +55,5 @@ namespace MapXML.Behaviors
         {
             throw new InvalidOperationException(ExceptionMessage_NoDirectSerialization);
         }
-
     }
 }

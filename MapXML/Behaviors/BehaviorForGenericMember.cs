@@ -83,6 +83,7 @@ namespace MapXML.Behaviors
         internal override string? GetTextContentToSerialize(IXMLInternalContext context)
          => ObtainAttributeValue(context);
 
+    
         private readonly List<ShouldOmitDelegate> _serializationFilters;
     }
 }

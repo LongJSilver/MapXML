@@ -54,7 +54,7 @@ namespace MapXML.Tests
         {
             const string PATTERN = @"Relation\d+";
 
-            public override bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out DeserializationPolicy policy, out Type result)
+            public override bool InfoForNode(IXMLState state, string nodeName, IReadOnlyDictionary<string, string> attributes, out ElementMappingInfo info)
             {
                 // Special case for handling Relation nodes dynamically based on their names (e.g., Relation1, Relation2, etc.)
                 // This is necessary because the standard attribute-based procedure cannot handle dynamic node names
@@ -62,12 +62,11 @@ namespace MapXML.Tests
                 // these nodes into the appropriate Relation objects.
                 if (state.CurrentInstance is RelationDetails && System.Text.RegularExpressions.Regex.IsMatch(nodeName, PATTERN))
                 {
-                    result = typeof(Relation);
-                    policy = DeserializationPolicy.Create;
+                    info = new ElementMappingInfo(DeserializationPolicy.Create, typeof(Relation));
                     return true;
                 }
 
-                return base.InfoForNode(state, nodeName, attributes, out policy, out result);
+                return base.InfoForNode(state, nodeName, attributes, out info);
             }
 
             public override void Finalized(IXMLState state, string nodeName, object result)
