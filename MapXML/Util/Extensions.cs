@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace MapXML.Utils
 {
-    public static class Extensions
+    internal static class Extensions
     {
         internal static object GetCurrentInstance(this IXMLInternalContext context) => context.CurrentInstance
                     ?? throw new InvalidOperationException("Current instance should not be null here!");
