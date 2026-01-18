@@ -17,10 +17,32 @@ namespace MapXML
         /// <para/> DEFAULT: false
         /// </summary>
         bool IgnoreRootNode { get; }
+        /// <summary>
+        /// Do not raise an exception when unhandled nodes are encountered during deserialization.
+        /// </summary>
+        bool AllowUnhandledNodes { get; }
+        /// <summary>
+        /// Do not raise an exception when unhandled text content is encountered during deserialization.
+        /// </summary>
+        bool AllowUnhandledText { get; }
     }
     public interface IDeserializationOptionsBuilder : IXMLOptionsBuilder<IDeserializationOptionsBuilder>
     {
         IDeserializationOptionsBuilder IgnoreRootNode(bool b);
+        IDeserializationOptionsBuilder AllowUnhandledNodes(bool b);
+        IDeserializationOptionsBuilder AllowUnhandledText(bool b);
+        /// <summary>
+        /// Allows all unhandled content (nodes, text) to be ignored during deserialization.
+        /// </summary>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        IDeserializationOptionsBuilder AllowAllUnhandledContent();
+        /// <summary>
+        /// Rasies an exception when any unhandled content (nodes, text) is encountered during deserialization.
+        /// </summary>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        IDeserializationOptionsBuilder ForbidAllUnhandledContent();
         IDeserializationOptions Build();
     }
     public class XMLDeserializer : XMLSerializerBase, IDisposable
@@ -38,6 +60,8 @@ namespace MapXML
                 if (CopyFrom is IDeserializationOptions so)
                 {
                     this.IgnoreRootNode = so.IgnoreRootNode;
+                    this.AllowUnhandledNodes = so.AllowUnhandledNodes;
+                    this.AllowUnhandledText = so.AllowUnhandledText;
                 }
             }
 
@@ -48,6 +72,8 @@ namespace MapXML
 
 #pragma warning disable CA1805 // It should be extra clear what the default value is
             public bool IgnoreRootNode { get; private set; } = false;
+            public bool AllowUnhandledNodes { get; private set; } = false;
+            public bool AllowUnhandledText { get; private set; } = true;
 #pragma warning restore CA1805
 
 
@@ -56,6 +82,27 @@ namespace MapXML
             IDeserializationOptionsBuilder IDeserializationOptionsBuilder.IgnoreRootNode(bool b)
             {
                 IgnoreRootNode = b;
+                return this;
+            }
+
+            IDeserializationOptionsBuilder IDeserializationOptionsBuilder.AllowUnhandledText(bool b)
+            {
+                this.AllowUnhandledText = b;
+                return this;
+            }
+            IDeserializationOptionsBuilder IDeserializationOptionsBuilder.AllowUnhandledNodes(bool b)
+            {
+                this.AllowUnhandledNodes = b;
+                return this;
+            }
+            IDeserializationOptionsBuilder IDeserializationOptionsBuilder.AllowAllUnhandledContent()
+            {
+                this.AllowUnhandledText = AllowUnhandledNodes = true;
+                return this;
+            }
+            IDeserializationOptionsBuilder IDeserializationOptionsBuilder.ForbidAllUnhandledContent()
+            {
+                this.AllowUnhandledText = AllowUnhandledNodes = false;
                 return this;
             }
         }
@@ -181,16 +228,23 @@ namespace MapXML
                     return;
 #endif
                 }
+
+
                 if (!ContextStack.InfoForNode(nodeName, attributes, out info))
                 {
-                    Throw($"No context was found for element <{nodeName}>");
-#if NETSTANDARD2_0
-                    // just to let the compiler know we can't get past this point
-                    // Since the [DoesNotReturn] attribute is not available in .NET Standard 2.0
-                    return;
-#endif
-
+                    if (Options.AllowUnhandledNodes)
+                    {
+                        //we create a dummy node that will just ignore everything
+                        Push(XMLNodeBehaviorProfile.CreateDummyToIgnore(this.Handler, this.Options, nodeName));
+                        _ignoreLevel = 0; //we ignore this node and everything below
+                        return;
+                    }
+                    else
+                    {
+                        throw new UnhandledNodeException(nodeName, CurrentLevel, CurrentPath);
+                    }
                 }
+
                 if (info.Policy == DeserializationPolicy.Create)
                 {
 
@@ -246,7 +300,7 @@ namespace MapXML
                         //we swallow this exception for now but we store it in the placeholder
                         //this process will hopefully be finalized later
                         //otherwise this exception will be thrown then
-                        currentObject = new PlaceHolderForLateLookup(new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, e));
+                        currentObject = new PlaceHolderForLateLookup(new SerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, e));
                     }
 
                     //If Lookup with attributes failed, let's suspend the lookup process for the moment,
@@ -313,11 +367,15 @@ namespace MapXML
                     _ignoreLevel--;
                     return;
             }
-        
+
             //---------------------------------//
             try
             {
                 ContextStack?.Finalized(name);
+            }
+            catch (XMLNodeBehaviorProfile.UnhandledTextContentException)
+            {
+                throw new UnhandledTextContentException(CurrentNodeName, CurrentLevel, CurrentPath);
             }
             catch (Exception e)
             {
@@ -337,7 +395,7 @@ namespace MapXML
             try
             {
                 if (ContextStack.EncounteredTextContent)
-                    throw new XMLMixedContentException(CurrentNodeName, CurrentLevel, CurrentPath);
+                    throw new MixedContentException(CurrentNodeName, CurrentLevel, CurrentPath);
                 ContextStack.StoreTextContent(text);
             }
             catch (Exception e)
@@ -367,13 +425,13 @@ namespace MapXML
 
     internal sealed class PlaceHolderForLateLookup
     {
-        public XMLSerializationException? PreviousException;
+        public SerializationException? PreviousException;
 
         public PlaceHolderForLateLookup()
         {
         }
 
-        public PlaceHolderForLateLookup(XMLSerializationException e)
+        public PlaceHolderForLateLookup(SerializationException e)
         {
             this.PreviousException = e;
         }

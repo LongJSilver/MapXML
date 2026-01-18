@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<?asd ?>
+<Tests>
+  <NodeToIgnore ID="Irrelevant_1" />
+  <SimpleValue      Number="1"
+                    String="ASDF"
+                    Decimal1="12.0"
+                    Decimal2="13.0"
+   >
+    2023-10-05
+    <NodeToIgnore ID="Irrelevant_2" />
+  </SimpleValue> 
+</Tests>  

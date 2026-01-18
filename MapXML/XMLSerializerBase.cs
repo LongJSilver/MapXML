@@ -161,13 +161,13 @@ namespace MapXML
         [DoesNotReturn]
         protected void Throw(string message, params Exception[] previousExc)
         {
-            throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath,
+            throw new SerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath,
                               message, previousExc);
         }
         [DoesNotReturn]
         protected void Throw(string message, Exception innerExc, params Exception[] previousExc)
         {
-            throw new XMLSerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, message,
+            throw new SerializationException(this.CurrentNodeName, this.CurrentLevel, this.CurrentPath, message,
                               inner: innerExc, previousExc);
         }
 

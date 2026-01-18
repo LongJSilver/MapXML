@@ -8,11 +8,13 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Xml.Linq;
 
 namespace MapXML.Behaviors
 {
     internal sealed partial class XMLNodeBehaviorProfile : IXMLInternalContext, IXMLState
     {
+        public readonly static IReadOnlyDictionary<string, string> NO_ATTRIBUTES = new ReadOnlyDictionary<string, string>(new Dictionary<string,string>());
         object? IXMLState.GetParent(int i)
         {
             if (i == 0) return CurrentInstance;
@@ -31,6 +33,11 @@ namespace MapXML.Behaviors
         public IXMLSerializationHandler? Handler => _handler;
         public IDictionary<string, object> CustomData => _customData;
         public IXMLOptions Options { get; }
+
+        /// <summary>
+        /// It is the caller's responsibility to ensure that Options is actually of type IDeserializationOptions
+        /// </summary>
+        private IDeserializationOptions DesOptions => (Options as IDeserializationOptions)!;
         internal readonly string NodeName;
         internal readonly bool IsSerializing;
         internal readonly Type? TargetType;
@@ -74,7 +81,7 @@ namespace MapXML.Behaviors
             this.Options = options;
 
             this.NodeName = Node;
-            this.Attributes = attributes ?? new Dictionary<string, string>();
+            this.Attributes = attributes ?? NO_ATTRIBUTES;
 
             CurrentInstance = currentObject;
             this.TargetType = targetType;
@@ -95,7 +102,15 @@ namespace MapXML.Behaviors
                 IsCreation = true
             };
         }
-
+        internal static XMLNodeBehaviorProfile CreateDummyToIgnore(IXMLSerializationHandler? handler, 
+            IXMLOptions options, string nodeName)
+        {
+            return new XMLNodeBehaviorProfile(handler, options, nodeName, NO_ATTRIBUTES, null, typeof(object), false)
+            {
+                IsCreation = true,
+                AggregationPolicy = AggregationPolicy.NoAggregation
+            };
+        }
         internal static XMLNodeBehaviorProfile CreateSerializationNode(IXMLSerializationHandler? handler, IXMLOptions opt,
             string name, Type targetType, object item, string? formatName = null)
         {
@@ -105,7 +120,7 @@ namespace MapXML.Behaviors
             return result;
         }
 
-        internal static XMLNodeBehaviorProfile GetDummyForLookupAttributes(
+        internal static XMLNodeBehaviorProfile CreateDummyForLookupAttributes(
             IXMLSerializationHandler? handler, IXMLOptions options,
             string targetNodeName, object item)
         {
@@ -788,10 +803,23 @@ namespace MapXML.Behaviors
             }
 
             if (_staticClassData?._textContentBehavior_forDes == null)
-                return false;
+            {
+                if (DesOptions.AllowUnhandledText)
+                    return false;
+                else
+                {
+                    throw new UnhandledTextContentException();
+                }
+
+            }
 
             _staticClassData._textContentBehavior_forDes.ProcessTextContent(this, value);
             return true;
+        }
+
+        internal class UnhandledTextContentException : Exception
+        {
+
         }
         internal bool ProcessValue(string NodeName, string AttributeName, object value)
         {
