@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
+using static MapXML.Behaviors.XMLNodeBehaviorProfile;
 
 namespace MapXML
 {
@@ -132,7 +133,8 @@ namespace MapXML
             : base(Options ?? new DefaultOptions(), Handler)
         {
             _firstNodeOwner = RootNodeOwner;
-            Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, null, null, false));
+
+            Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, false, null, null));
             this._source = source ?? throw new ArgumentNullException(nameof(source));
             _reader = new SaxReader(_source);
             _reader.OnNodeEnd += this.NodeEnd;
@@ -185,7 +187,7 @@ namespace MapXML
                     // we where told to IGNORE the root node, and we were given NO owner for it,
                     // so we just push the name to the stack and return
                     LogicalLevelOffset = -1; // the root node will not yield any results
-                    Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, nodeName, _firstNodeOwner, false));
+                    Push(XMLNodeBehaviorProfile.CreateTopNode(Handler, this.Options, false, nodeName, _firstNodeOwner));
                     return;
                 }
                 else if (this.Options.IgnoreRootNode && _firstNodeOwner != null)
@@ -308,9 +310,13 @@ namespace MapXML
                     //in the hope that this node might contain some text content that would let us perform a successful lookup
                 }
             }
+            NodeLocalContext ctx = new() { NodeName = nodeName, CurrentInstance = currentObject!, TargetType = info.TargetType!, Attributes = attributes, LocallyAllowImplicit = info.AllowImplicit };
 
-            Push(XMLNodeBehaviorProfile.CreateDeserializationNode(this.Handler, this.Options,
-                info.Policy == DeserializationPolicy.Create, IsAggregation ? info.AggregateMultipleDefinitions : AggregationPolicy.NoAggregation, nodeName, info.TargetType!, attributes, currentObject!));
+            Push(XMLNodeBehaviorProfile.CreateDeserializationNode(
+                this.Handler, this.Options,
+                info.Policy == DeserializationPolicy.Create,
+                IsAggregation ? info.AggregateMultipleDefinitions : AggregationPolicy.NoAggregation,
+                ctx));
 
             if (shouldAbsorbAttributes && ContextStack.CanProcessAttributes)
             {

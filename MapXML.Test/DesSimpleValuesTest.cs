@@ -1,4 +1,5 @@
 ﻿using MapXML.Attributes;
+using System.Numerics;
 
 namespace MapXML.Tests
 {
@@ -57,6 +58,38 @@ namespace MapXML.Tests
             Assert.IsTrue(RoundTripSerializerTest<SimpleValueClass>(handler, XMLDeserializer.DefaultOptions_IgnoreRootNode));
         }
 
+
+        [TestMethod]
+        public void ExternalClasses()
+        {
+            var ser = new XMLSerializer(XMLSerializer.OptionsBuilder().WithImplicitType(typeof(Vector3)).Build());
+            ser.AddItem("Led", new Led(43, 1, 2, 3));
+            ser.Run();
+
+
+            //*******************//
+
+            Stream s = ser.ResultStream;
+            BaseTestHandler handler = new BaseTestHandler();
+            handler.Associate("Led", typeof(Led), DeserializationPolicy.Create);
+            XMLDeserializer xdes = new XMLDeserializer(s, handler, RootNodeOwner: null, XMLDeserializer.OptionsBuilder().IgnoreRootNode(false).WithImplicitType(typeof(Vector3)).Build());
+            xdes.Run();
+          
+        }
+
+        private class Led
+        {
+            public Led(ushort globalID, float X, float Y, float Z)
+            {
+                this.GlobalID = globalID;
+                this.Location = new Vector3(X, Y, Z);
+            }
+
+            [XMLAttribute]
+            public ushort GlobalID { get; set; }
+            [XMLChild]
+            public Vector3 Location { get; set; }
+        }
         [TestMethod]
         public void SimpleValues_IgnoreNodes()
         {

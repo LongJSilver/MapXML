@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using static MapXML.Behaviors.XMLNodeBehaviorProfile;
 
 namespace MapXML
 {
@@ -244,7 +245,7 @@ namespace MapXML
                 using (var stringWriter = new StringWriter_WithEncoding(_sb, cult, enc))
                 using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings { Indent = true, Encoding = enc }))
                 {
-                    Push(XMLNodeBehaviorProfile.CreateTopNode(this.Handler, this.Options, Options.AdditionalRootNode, null, true));
+                    Push(XMLNodeBehaviorProfile.CreateTopNode(this.Handler, this.Options, true, Options.AdditionalRootNode, null));
 
                     ContextStack!.Culture = cult;
 
@@ -262,9 +263,15 @@ namespace MapXML
 
                     foreach (var firstLevelItem in toSerialize)
                     {
-                        Push(XMLNodeBehaviorProfile.CreateSerializationNode(Handler, this.Options,
-                            firstLevelItem.name, firstLevelItem.item.GetType(),
-                            firstLevelItem.item, firstLevelItem.formatName));
+                        NodeLocalContext ctx = new()
+                        {
+                            NodeName = firstLevelItem.name,
+                            CurrentInstance = firstLevelItem.item,
+                            TargetType = firstLevelItem.item.GetType(),
+                            Attributes = NO_ATTRIBUTES
+                        };
+
+                        Push(XMLNodeBehaviorProfile.CreateSerializationNode(Handler, this.Options, firstLevelItem.formatName, ctx));
                         WriteCurrentNodeCreate(xmlWriter);
                         Pop();
                     }
@@ -325,7 +332,7 @@ namespace MapXML
             }
 
             string? textContent = ContextStack.GetTextContentToSerialize();
-            List<(string nodeName, object child, Type targetType, DeserializationPolicy policy)> children = ContextStack.GetAllChildrenToSerialize();
+            List<(string nodeName, object child, Type targetType, DeserializationPolicy policy, bool AllowImplicit)> children = ContextStack.GetAllChildrenToSerialize();
 
             bool hasChildren = children.Count != 0;
             bool hasTextContent = !String.IsNullOrEmpty(textContent);
@@ -335,13 +342,15 @@ namespace MapXML
             {
                 if (hasChildren)
                 {
-                    foreach ((string nodeName, object child, Type targetType, DeserializationPolicy policy) in children)
+                    foreach ((string nodeName, object child, Type targetType, DeserializationPolicy policy, bool AllowImplicit) in children)
                     {
                         if (!ShouldSerializeAs(nodeName, XMLSourceType.Child)) continue;
 
                         if (policy == DeserializationPolicy.Create)
                         {
-                            Push(XMLNodeBehaviorProfile.CreateSerializationNode(this.Handler, this.Options, nodeName, targetType, child));
+                            NodeLocalContext ctx = new() { NodeName = nodeName, CurrentInstance = child, TargetType = targetType, LocallyAllowImplicit = AllowImplicit };
+
+                            Push(XMLNodeBehaviorProfile.CreateSerializationNode(this.Handler, this.Options, null, ctx));
                             WriteCurrentNodeCreate(xmlWriter);
                             Pop();
                         }

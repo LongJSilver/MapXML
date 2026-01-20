@@ -177,7 +177,7 @@ namespace MapXML
             profile = XMLNodeBehaviorProfile.CreateDummyForLookupAttributes(context.Handler, context.Options, TargetNodeName, item);
             Dictionary<string, string> atts_firstAttempt = profile.GetAttributesToSerialize(attNames.Contains);
 
-            if (atts_firstAttempt.Count < attNames.Count && !context.Options.AllowImplicitFields)
+            if (atts_firstAttempt.Count < attNames.Count && !context.Options.ShouldUseImplicitFields(item.GetType()))
             {
                 //attempt again, but with implicit fields; this could have unforeseen effects, so in case of exception we just return the first attempt
                 //and hope the requesting function can deal with missing attributes

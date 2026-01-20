@@ -20,11 +20,11 @@ namespace MapXML.Attributes
         public int SerializationOrder { get; set; } = byte.MaxValue;
         public bool CanSerialize { get; set; } = true;
         public bool CanDeserialize { get; set; } = true;
+        public bool AllowImplicit { get; set; } = false;
 
         /// <summary>
         /// Relevant for deserialization; when applied to child nodes it's only relevant when the policy is <see cref="DeserializationPolicy.Create"/>. <para/>
-        /// When False, if the same entity is encountered more than once an exception will be thrown.<para/>
-        /// When true, it allows the source xml to specify the same entity for creation more than once;
+        /// When the value is different then <see cref="AggregationPolicy.NoAggregation"/>, it allows the source xml to specify the same entity for creation more than once;
         /// every time an entity is encountered again after creation the system will attempt to look it back up 
         /// and integrate the already parsed attributes and children with the ones specified in the new node. <para/>
         /// Useful when parsing more than one xml source that integrate data for entities defined previously.<para/>

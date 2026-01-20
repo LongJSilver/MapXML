@@ -14,8 +14,11 @@ namespace MapXML
         /// which have no explicit XMLMemberAttribute defined. These fields and properties
         /// will be treated as attributes of the parent node, with the same name as the field itself
         /// </summary>
-        public bool AllowImplicitFields { get; }
-
+        bool AllowImplicitFields { get; }
+        /// <summary>
+        /// List of Types for which implicit fields/properties should be considered during serialization/deserialization
+        /// </summary>
+        public IReadOnlyCollection<Type> ImplicitTypes { get; }
         CultureInfo? Culture { get; }
     }
     public interface IXMLOptionsBuilder<T> where T : IXMLOptionsBuilder<T>
@@ -29,6 +32,7 @@ namespace MapXML
         public T WithCulture(string s);
         public T WithCulture(CultureInfo s);
         public T WithDefaultCulture();
+        public T WithImplicitType(Type t);
     }
 
     public abstract class XMLSerializerBase
@@ -60,9 +64,19 @@ namespace MapXML
 
             public CultureInfo? Culture { get; private set; }
             public bool AllowImplicitFields { get; private set; }
+
+            private HashSet<Type> _implicitTypes = new HashSet<Type>();
+            public IReadOnlyCollection<Type> ImplicitTypes => _implicitTypes;
+
             T IXMLOptionsBuilder<T>.AllowImplicitFields(bool b)
             {
                 AllowImplicitFields = b;
+                return (T)(object)this;
+            }
+            T IXMLOptionsBuilder<T>.WithImplicitType(Type t)
+            {
+                if (t != null && !_implicitTypes.Contains(t))
+                    _implicitTypes.Add(t);
                 return (T)(object)this;
             }
 

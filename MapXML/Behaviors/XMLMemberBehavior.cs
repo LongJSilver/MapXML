@@ -30,6 +30,7 @@ namespace MapXML.Behaviors
         public readonly MemberInfo Member;
         public bool CanSerialize => (CanSerializeAsAttribute || CanSerializeAsChild || CanSerializeAsTextContent);
         public bool CanDeserialize => _canDeserialize;
+        public bool AllowImplicit { get; }
         public AggregationPolicy AggregationPolicy => _aggregate;
 
         private readonly bool _canSerialize;
@@ -69,7 +70,7 @@ namespace MapXML.Behaviors
                 _canSerialize = attribute.CanSerialize;
                 _aggregate = attribute.AggregateMultipleDefinitions;
             }
-
+            this.AllowImplicit = attribute?.AllowImplicit ?? false;
             this.SerializationOrder = attribute?.SerializationOrder ?? int.MaxValue;
             //-------//
         }

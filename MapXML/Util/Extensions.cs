@@ -8,6 +8,15 @@ namespace MapXML.Utils
 {
     internal static class Extensions
     {
+
+        public static bool ShouldUseImplicitFields(this IXMLOptions options, Type t)
+        {
+            if (options.AllowImplicitFields)
+                return true;
+            if (options.ImplicitTypes.Contains(t))
+                return true;
+            return false;
+        }
         internal static object GetCurrentInstance(this IXMLInternalContext context) => context.CurrentInstance
                     ?? throw new InvalidOperationException("Current instance should not be null here!");
         public static IEnumerable<ResultType> ForEach<EnumerableType, ResultType>(
@@ -71,6 +80,11 @@ namespace MapXML.Utils
             else if (member is PropertyInfo pinfo) return pinfo.CanWrite;
             else return false;
 
+        }
+
+        public static bool IsIndexerProperty(this MemberInfo member)
+        {
+            return member is PropertyInfo p && p.GetIndexParameters().Length > 0;
         }
         public static bool TryGetMemberType(Type subjectType, string memberName, out Type? t, out MemberInfo? pinfo)
         {

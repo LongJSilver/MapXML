@@ -126,12 +126,14 @@ namespace MapXML
         public DeserializationPolicy Policy { get; internal set; }
         public Type? TargetType { get; internal set; }
         public AggregationPolicy AggregateMultipleDefinitions { get; internal set; }
+        public bool AllowImplicit { get; internal set; }
 
-        public ElementMappingInfo(DeserializationPolicy policy, Type? typeToCreate, AggregationPolicy aggregateMultipleDefinitions = AggregationPolicy.NoAggregation)
+        public ElementMappingInfo(DeserializationPolicy policy, Type? typeToCreate, AggregationPolicy aggregateMultipleDefinitions = AggregationPolicy.NoAggregation, bool AllowImplicit = false)
         {
             this.Policy = policy;
             this.TargetType = typeToCreate;
             this.AggregateMultipleDefinitions = aggregateMultipleDefinitions;
+            this.AllowImplicit = AllowImplicit;
         }
     }
     public interface IXMLSerializationHandler

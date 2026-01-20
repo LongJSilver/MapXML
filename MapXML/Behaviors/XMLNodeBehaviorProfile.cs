@@ -14,7 +14,7 @@ namespace MapXML.Behaviors
 {
     internal sealed partial class XMLNodeBehaviorProfile : IXMLInternalContext, IXMLState
     {
-        public readonly static IReadOnlyDictionary<string, string> NO_ATTRIBUTES = new ReadOnlyDictionary<string, string>(new Dictionary<string,string>());
+        public readonly static IReadOnlyDictionary<string, string> NO_ATTRIBUTES = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
         object? IXMLState.GetParent(int i)
         {
             if (i == 0) return CurrentInstance;
@@ -71,50 +71,60 @@ namespace MapXML.Behaviors
             return prof?.Culture;
         }
 
+        internal struct NodeLocalContext
+        {
+            public string NodeName;
+            public IReadOnlyDictionary<string, string>? Attributes;
+            public object? CurrentInstance;
+            public Type? TargetType;
+            public bool LocallyAllowImplicit;
+        }
         private XMLNodeBehaviorProfile(
             IXMLSerializationHandler? handler, IXMLOptions options,
-                 string Node, IReadOnlyDictionary<string, string>? attributes,
-              object? currentObject, Type? targetType,
-                 bool IsSerializing)
+                 bool IsSerializing, NodeLocalContext localCTX)
         {
             _handler = handler;
             this.Options = options;
 
-            this.NodeName = Node;
-            this.Attributes = attributes ?? NO_ATTRIBUTES;
+            this.NodeName = localCTX.NodeName;
+            this.Attributes = localCTX.Attributes ?? NO_ATTRIBUTES;
 
-            CurrentInstance = currentObject;
-            this.TargetType = targetType;
+            CurrentInstance = localCTX.CurrentInstance;
+            this.TargetType = localCTX.TargetType;
 
             this.IsSerializing = IsSerializing;
             //------------------//
             _customData = new Dictionary<string, object>();
             if (CurrentInstance != null && !CurrentInstance.Equals(typeof(string)))
             {
-                FindStaticData(this.Options.AllowImplicitFields);
+
+                Type t = this.CurrentInstance.GetType();
+                _staticClassData = 
+                FindStaticData(t, this.Options.ShouldUseImplicitFields(t) ||localCTX.LocallyAllowImplicit);
             }
         }
 
-        internal static XMLNodeBehaviorProfile CreateTopNode(IXMLSerializationHandler? handler, IXMLOptions options, string? NodeName, object? owner, bool isSerializing)
+        internal static XMLNodeBehaviorProfile CreateTopNode(IXMLSerializationHandler? handler, IXMLOptions options, bool isSerializing, string? NodeName, object? owner)
         {
-            return new XMLNodeBehaviorProfile(handler, options, NodeName ?? string.Empty, null, owner, owner?.GetType(), isSerializing)
+            NodeLocalContext ctx = new() { NodeName = NodeName ?? string.Empty, CurrentInstance = owner, TargetType = owner?.GetType(), Attributes = NO_ATTRIBUTES };
+            return new XMLNodeBehaviorProfile(handler, options, isSerializing, ctx)
             {
                 IsCreation = true
             };
         }
-        internal static XMLNodeBehaviorProfile CreateDummyToIgnore(IXMLSerializationHandler? handler, 
+        internal static XMLNodeBehaviorProfile CreateDummyToIgnore(IXMLSerializationHandler? handler,
             IXMLOptions options, string nodeName)
         {
-            return new XMLNodeBehaviorProfile(handler, options, nodeName, NO_ATTRIBUTES, null, typeof(object), false)
+            NodeLocalContext ctx = new() { NodeName = nodeName, CurrentInstance = null, TargetType = typeof(object), Attributes = NO_ATTRIBUTES };
+            return new XMLNodeBehaviorProfile(handler, options, false, ctx)
             {
                 IsCreation = true,
                 AggregationPolicy = AggregationPolicy.NoAggregation
             };
         }
-        internal static XMLNodeBehaviorProfile CreateSerializationNode(IXMLSerializationHandler? handler, IXMLOptions opt,
-            string name, Type targetType, object item, string? formatName = null)
+        internal static XMLNodeBehaviorProfile CreateSerializationNode(IXMLSerializationHandler? handler, IXMLOptions opt, string? formatName, NodeLocalContext ctx)
         {
-            var result = new XMLNodeBehaviorProfile(handler, opt, name, null, item, targetType, true);
+            var result = new XMLNodeBehaviorProfile(handler, opt, true, ctx);
             if (formatName != null)
                 result.Culture = CultureInfo.GetCultureInfo(formatName);
             return result;
@@ -124,16 +134,16 @@ namespace MapXML.Behaviors
             IXMLSerializationHandler? handler, IXMLOptions options,
             string targetNodeName, object item)
         {
-            return new XMLNodeBehaviorProfile(handler, options, targetNodeName, null, item, item.GetType(), true);
+            NodeLocalContext ctx = new() { NodeName = targetNodeName, CurrentInstance = item, TargetType = item.GetType(), Attributes = NO_ATTRIBUTES };
+            return new XMLNodeBehaviorProfile(handler, options, true, ctx);
         }
 
 
         internal static XMLNodeBehaviorProfile CreateDeserializationNode(IXMLSerializationHandler? handler,
-            IXMLOptions options, bool creation, AggregationPolicy aggregation,
-            string nodeName, Type targetType, Dictionary<string, string> attributes, object owner)
+            IXMLOptions options, bool creation, AggregationPolicy aggregation, NodeLocalContext ctx
+            )
         {
-
-            return new XMLNodeBehaviorProfile(handler, options, nodeName, attributes, owner, targetType, false)
+            return new XMLNodeBehaviorProfile(handler, options, false, ctx)
             {
                 IsCreation = creation,
                 AggregationPolicy = aggregation
@@ -169,9 +179,9 @@ namespace MapXML.Behaviors
                 else return null;
             }
         }
-        internal List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)> GetAllChildrenToSerialize()
+        internal List<(String nodeName, object child, Type targetType, DeserializationPolicy policy, bool AllowImplicit)> GetAllChildrenToSerialize()
         {
-            List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)> result = new List<(String nodeName, object child, Type targetType, DeserializationPolicy policy)>();
+            List<(String nodeName, object child, Type targetType, DeserializationPolicy policy, bool AllowImplicit)> result = new ();
             if (IsNamedTextContentNode)
             {
                 return result;
@@ -188,7 +198,7 @@ namespace MapXML.Behaviors
                     string NodeName = beh.NodeName;
                     foreach (var child in beh.GetChildrenToSerialize(this, NodeName))
                     {
-                        result.Add((NodeName, child, beh.TypeToCreate, beh.Policy));
+                        result.Add((NodeName, child, beh.TypeToCreate, beh.Policy, beh.AllowImplicit));
                     }
                 }
             }
@@ -240,11 +250,15 @@ namespace MapXML.Behaviors
             return result;
         }
 
-        private void FindStaticData(bool allowImplicitFields)
-        {
-            Type t = this.GetCurrentInstance().GetType();
-            if (!__typeCache.TryGetValue((t, allowImplicitFields), out var data))
+        private static XMLStaticClassData FindStaticData(Type t, bool allowImplicitFields)
+        {          
+            (Type t, bool allowImplicitFields) CacheKey = (t, allowImplicitFields);
+            if (!__typeCache.TryGetValue(CacheKey, out var data))
             {
+                if (t.IsDefined(typeof(XMLAllowImplicitAttribute), true))
+                {
+                    allowImplicitFields = true;
+                }
                 List<XMLMemberBehavior> _behaviors = new List<XMLMemberBehavior>();
                 List<XMLFunction> _functions = new List<XMLFunction>();
 
@@ -265,18 +279,18 @@ namespace MapXML.Behaviors
                         if (m.IsDefined(typeof(NonSerializedAttribute))) continue;
                         if (m.IsDefined(typeof(XMLNonSerializedAttribute))) continue;
                     }
-
                     int added = 0;
                     foreach (var att in m.GetCustomAttributes(true))
                     {
                         if (att is AbstractXMLMemberAttribute xmlMemberAttribute)
                         {
+                            xmlMemberAttribute.AllowImplicit |= m.IsDefined(typeof(XMLAllowImplicitAttribute), true);
                             added++;
                             members.Add((m, xmlMemberAttribute));
                         }
                     }
 
-                    if (added == 0 && allowImplicitFields && (m is PropertyInfo || (m is FieldInfo fi && fi.IsPublic)))
+                    if (added == 0 && allowImplicitFields && (m is PropertyInfo || (m is FieldInfo fi && fi.IsPublic)) && ! m.IsIndexerProperty())
                     {
                         members.Add((m, null));
                     }
@@ -301,9 +315,9 @@ namespace MapXML.Behaviors
                     beh.Init();
                     _behaviors.Add(beh);
                 }
-                __typeCache[(t, allowImplicitFields)] = data = new XMLStaticClassData(t, _behaviors, _functions);
+                __typeCache[CacheKey] = data = new XMLStaticClassData(t, _behaviors, _functions);
             }
-            _staticClassData = data;
+            return data;
         }
 
         private static Dictionary<Type, ConvertFromString> __standardConversions =
@@ -468,7 +482,7 @@ namespace MapXML.Behaviors
 
             if (_staticClassData != null && _staticClassData._childBehaviors_forDes.TryGetValue(nodeName, out var beh))
             {
-                info = new ElementMappingInfo(beh.Policy, beh.TypeToCreate, beh.AggregationPolicy);
+                info = new ElementMappingInfo(beh.Policy, beh.TypeToCreate, beh.AggregationPolicy, beh.AllowImplicit);
                 return true;
             }
 
