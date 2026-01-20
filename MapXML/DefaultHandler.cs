@@ -11,7 +11,7 @@ namespace MapXML
         protected Dictionary<String, (Type targetType, DeserializationPolicy policy)> QuickAssociations { get; private set; }
             = new Dictionary<string, (Type targetType, DeserializationPolicy policy)>();
 
-        private readonly Dictionary<Type, Func<object>> _creators = new Dictionary<Type, Func<object>>();
+        private readonly Dictionary<Type, Func<IReadOnlyDictionary<string, string>, object>> _creators = new();
 
         private readonly Dictionary<Type, ConvertToString> _Converters_ToString = new Dictionary<Type, ConvertToString>();
         private readonly Dictionary<Type, ConvertFromString> _Converters_FromString = new Dictionary<Type, ConvertFromString>();
@@ -141,15 +141,21 @@ namespace MapXML
 
         public void AddCreationOveride<V>(Func<object> creator)
         {
+            _creators[typeof(V)] = _ => creator();
+        }
+
+
+        public void AddCreationOveride<V>(Func<IReadOnlyDictionary<string, string>, object> creator)
+        {
             _creators[typeof(V)] = creator;
         }
 
 
-        public virtual bool OverrideCreation(IXMLState state, Type t, [MaybeNullWhen(false)][NotNullWhen(true)] out object result)
+        public virtual bool OverrideCreation(IXMLState state, IReadOnlyDictionary<string, string> attributes, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object result)
         {
-            if (_creators.TryGetValue(t, out var creator))
+            if (_creators.TryGetValue(targetClass, out var creator))
             {
-                result = creator();
+                result = creator(attributes);
                 return true;
             }
             else

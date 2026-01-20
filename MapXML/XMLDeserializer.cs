@@ -263,7 +263,7 @@ namespace MapXML
                     if (!IsAggregation)
                     {
                         //no existing instance was found, so we create a new one
-                        if (!(ContextStack.Handler?.OverrideCreation(ContextStack, info.TargetType!, out currentObject) ?? false)
+                        if (!(ContextStack.Handler?.OverrideCreation(ContextStack, attributes, info.TargetType!, out currentObject) ?? false)
                             )
                         {
                             if (info.TargetType!.Equals(typeof(string)))

@@ -140,7 +140,7 @@ namespace MapXML
         //***************************************************************************//
 
         //Domain: object creation and initiazation
-        bool OverrideCreation(IXMLState state, Type t, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
+        bool OverrideCreation(IXMLState state, IReadOnlyDictionary<string, string> attributes, Type targetClass, [MaybeNullWhen(false)][NotNullWhen(true)] out object? result);
         void InjectDependencies(IXMLState state, object newObject);
 
         //*****************//
